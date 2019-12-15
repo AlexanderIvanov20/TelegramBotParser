@@ -12,8 +12,11 @@ HEADERS = {
 class Parser:
     def __init__(self) -> None:
         self.PAGINATED_LINKS = []
+        # Create session and bind headers
         self.session = requests.Session()
         self.session.headers.update(HEADERS)
+
+        # Add conditions
         self.reviews_condition = True
         self.company_exist = True
 
@@ -88,6 +91,7 @@ class Parser:
             print('Error. Company does not exist')
 
 
+# Formate timestamp to usuall date
 def format_date(date_string: str) -> str:
     formated_date = int(
         date_string[date_string.find("(") + 1:date_string.find(",") - 3])

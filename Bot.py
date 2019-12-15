@@ -1,4 +1,5 @@
 import telebot
+import threading
 from telebot.types import *
 from Parser import Parser
 from Keyboards import *
@@ -7,12 +8,14 @@ from Keyboards import *
 # Iniialize Bot and Parser objects
 TOKEN = '1030953540:AAFt6-O5laMVRjO8hN1uA-dt7qZPPG0439c'
 bot = telebot.TeleBot(TOKEN)
-parser = Parser()
+data = {}
 
 
 # On start command output inline menu
 @bot.message_handler(commands=['start'])
 def on_start(message: Message) -> None:
+    parser = Parser()
+    data[f'{message.chat.id}_parser'] = parser
     keyboard = keyboard_switch_on_start()
     bot.send_message(chat_id=message.chat.id,
                      text='Выберете нужный Вам пункт', reply_markup=keyboard)
@@ -32,7 +35,8 @@ def default_query(query) -> None:
 def query_get(query) -> None:
     try:
         user_message = query.query
-        possible_variants = parser.get_variants(user_message)['items']
+        possible_variants = data[f'{query.from_user.id}_parser'].get_variants(user_message)[
+            'items']
         print(possible_variants)
         final_inline_query = []
 
@@ -55,9 +59,9 @@ def get_reviews(message: Message) -> None:
     user_message = (message.text)[1:-1]
     print(user_message)
 
-    final_dict = parser.get_ads(user_message)
-    if parser.company_exist:
-        if parser.reviews_condition:
+    final_dict = data[f'{message.chat.id}_parser'].get_ads(user_message)
+    if data[f'{message.chat.id}_parser'].company_exist:
+        if data[f'{message.chat.id}_parser'].reviews_condition:
             for even in final_dict:
                 bot.send_message(chat_id=message.chat.id,
                                  text=f"Дата: {even['date']}\nОткуда: {even['town_from']}\nКуда: {even['town_to']}\nОтзыв: {even['short']}")
