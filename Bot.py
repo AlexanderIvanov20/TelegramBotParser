@@ -57,20 +57,101 @@ def query_get(query) -> None:
 @bot.message_handler(func=lambda message: (message.text)[0] == '/' and (message.text)[-1] == '/')
 def get_reviews(message: Message) -> None:
     user_message = (message.text)[1:-1]
+    bot.send_message(chat_id=message.chat.id,
+                     text='Подождите немного... Идет сбор данных')
     print(user_message)
+    result_string = ''
 
-    final_dict = data[f'{message.chat.id}_parser'].get_ads(user_message)
+    try:
+        final_dict = data[f'{message.chat.id}_parser'].get_ads(user_message)
+    except KeyError as k:
+        data[f'{message.chat.id}_parser'] = Parser()
+        final_dict = data[f'{message.chat.id}_parser'].get_ads(user_message)
+
+    data[f'{message.chat.id}_final_dict'] = final_dict
+
     if data[f'{message.chat.id}_parser'].company_exist:
         if data[f'{message.chat.id}_parser'].reviews_condition:
+            data[f'{message.chat.id}_prev'] = 0
+            data[f'{message.chat.id}_next'] = 5
+            final_dict = final_dict[data[f'{message.chat.id}_prev']
+                :data[f'{message.chat.id}_next']]
+
             for even in final_dict:
-                bot.send_message(chat_id=message.chat.id,
-                                 text=f"Дата: {even['date']}\nОткуда: {even['town_from']}\nКуда: {even['town_to']}\nОтзыв: {even['short']}")
+                result_string += f"Дата: {even['date']}\nОткуда: {even['town_from']}\nКуда: {even['town_to']}\nОтзыв: {even['short']}\n\n"
+            bot.delete_message(chat_id=message.chat.id,
+                               message_id=message.message_id + 1)
+            bot.send_message(
+                chat_id=message.chat.id, text=result_string, reply_markup=pagination_keyboard(prev_btn=False))
         else:
             bot.send_message(chat_id=message.chat.id,
                              text='У данной компании нет отзывов\nПопробуйте еще раз ввести название', reply_markup=keyboard_switch_on_start())
     else:
         bot.send_message(chat_id=message.chat.id,
                          text='Такой компании не существует\nПопробуйте еще раз ввести название', reply_markup=keyboard_switch_on_start())
+
+
+# Get all callbacks
+@bot.callback_query_handler(func=lambda call: True)
+def answer_callback(call: CallbackQuery):
+    # On previous button click
+    if call.data == 'prev':
+        result_string = ''
+        if data[f'{call.from_user.id}_prev'] - 5 <= 0:
+            data[f'{call.from_user.id}_prev'] = 0
+            data[f'{call.from_user.id}_next'] = 5
+
+            keyboard = pagination_keyboard(prev_btn=False)
+        elif data[f'{call.from_user.id}_prev'] - 5 > 0:
+            data[f'{call.from_user.id}_prev'] -= 5
+            data[f'{call.from_user.id}_next'] -= 5
+
+            keyboard = pagination_keyboard()
+
+        final_dict = data[f'{call.message.chat.id}_final_dict']
+        final_dict = final_dict[data[f'{call.message.chat.id}_prev']
+            :data[f'{call.message.chat.id}_next']]
+
+        for even in final_dict:
+            result_string += f"Дата: {even['date']}\nОткуда: {even['town_from']}\nКуда: {even['town_to']}\nОтзыв: {even['short']}\n\n"
+        bot.edit_message_text(text=result_string, chat_id=call.from_user.id,
+                              message_id=call.message.message_id, reply_markup=keyboard)
+
+    # On next button click
+    if call.data == 'next':
+        result_string = ''
+        final_dict = data[f'{call.message.chat.id}_final_dict']
+
+        if len(final_dict) - data[f'{call.from_user.id}_next'] <= 5:
+            final_dict = final_dict[data[f'{call.from_user.id}_next']:]
+            data[f'{call.from_user.id}_prev'] += 5
+            data[f'{call.from_user.id}_next'] += 5
+
+            keyboard = pagination_keyboard(next_btn=False)
+        elif data[f'{call.from_user.id}_next'] + 5 < len(final_dict):
+            data[f'{call.from_user.id}_prev'] += 5
+            data[f'{call.from_user.id}_next'] += 5
+            final_dict = final_dict[data[f'{call.message.chat.id}_prev']
+                :data[f'{call.message.chat.id}_next']]
+
+            keyboard = pagination_keyboard()
+        elif data[f'{call.from_user.id}_next'] + 5 == len(final_dict):
+            data[f'{call.from_user.id}_prev'] += 5
+            data[f'{call.from_user.id}_next'] += 5
+            final_dict = final_dict[data[f'{call.message.chat.id}_prev']
+                :data[f'{call.message.chat.id}_next']]
+
+            keyboard = pagination_keyboard(next_btn=False)
+        else:
+            print('Else block. Next')
+            final_dict = final_dict[data[f'{call.message.chat.id}_prev']
+                :data[f'{call.message.chat.id}_next']]
+            keyboard = pagination_keyboard(next_btn=False)
+
+        for even in final_dict:
+            result_string += f"Дата: {even['date']}\nОткуда: {even['town_from']}\nКуда: {even['town_to']}\nОтзыв: {even['short']}\n\n"
+        bot.edit_message_text(text=result_string, chat_id=call.from_user.id,
+                              message_id=call.message.message_id, reply_markup=keyboard)
 
 
 # Else block

@@ -13,8 +13,8 @@ class Parser:
     def __init__(self) -> None:
         self.PAGINATED_LINKS = []
         # Create session and bind headers
-        self.session = requests.Session()
-        self.session.headers.update(HEADERS)
+        self.__session = requests.Session()
+        self.__session.headers.update(HEADERS)
 
         # Add conditions
         self.reviews_condition = True
@@ -23,7 +23,7 @@ class Parser:
     def get_variants(self, string: str) -> dict:
         encoded_string = requests.utils.quote(string)
         url = BASE_URL + f'?query={encoded_string}&excludeCurrent=false'
-        response = self.session.get(url).json()
+        response = self.__session.get(url).json()
         return response
 
     def initial_request(self, string: str) -> tuple:
@@ -33,7 +33,7 @@ class Parser:
         try:
             response = response['items'][0]['owner']['id']
             content_url = f'https://lardi-trans.com/reliability_zone/search_responses/?firmFromId={response}&'
-            response_content = self.session.get(content_url).content
+            response_content = self.__session.get(content_url).content
             soup = BeautifulSoup(response_content, 'lxml')
             return soup, response
         except IndexError:
@@ -41,19 +41,19 @@ class Parser:
             print('Error. Message uncorrect')
 
     def get_paginated_links(self, soup: str, some_id: int) -> None:
+        content_url = f'https://lardi-trans.com/reliability_zone/search_responses/?firmFromId={some_id}&'
         try:
             pagination = int(soup.select('.pagination')[
                 0].find_all('li')[-2].find('a').text.strip())
+            print(pagination)
 
-            content_url = f'https://lardi-trans.com/reliability_zone/search_responses/?firmFromId={some_id}&'
             self.PAGINATED_LINKS.append(content_url)
-
             for item in range(2, pagination + 1):
                 self.PAGINATED_LINKS.append(content_url + f'page={item}')
         except IndexError:
-            self.PAGINATED_LINKS = []
-            self.reviews_condition = False
-            print('Index error')
+            self.PAGINATED_LINKS = [content_url]
+            # self.reviews_condition = False
+            print('No paginated pages')
 
     def get_ads(self, string: str) -> list:
         result_list = []
@@ -62,7 +62,7 @@ class Parser:
             self.get_paginated_links(soup, some_id)
 
             for item in self.PAGINATED_LINKS:
-                response = self.session.get(item).content
+                response = self.__session.get(item).content
                 soup = BeautifulSoup(response, 'lxml')
 
                 ads = soup.find_all('div', attrs={'class': 'rz-feedback_item'})
@@ -85,7 +85,10 @@ class Parser:
                         'town_to': town_to,
                         'short': short
                     })
-            return result_list
+            if result_list != []:
+                return result_list
+            else:
+                self.reviews_condition = False
         except TypeError:
             self.company_exist = False
             print('Error. Company does not exist')
