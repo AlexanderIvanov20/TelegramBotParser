@@ -1,4 +1,6 @@
 import requests
+import mysql.connector
+
 from bs4 import BeautifulSoup
 from datetime import datetime
 
@@ -94,9 +96,13 @@ class Parser:
                     'class': 'rz-feedback_service-person_name'
                 }).find('a')['href']
 
+                content_ad = div.find('div', attrs={
+                    'class': 'rz-feedback__short'
+                }).text.strip()
+
                 print(date, from_country, to_country, from_town,
                       to_town, customer, customer_link, client, client_link,
-                      date_some)
+                      date_some, content_ad)
 
     def get_variants(self, string: str) -> dict:
         encoded_string = requests.utils.quote(string)
