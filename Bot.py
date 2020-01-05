@@ -6,7 +6,7 @@ from Keyboards import *
 
 
 # Iniialize Bot and Parser objects
-TOKEN = '1030953540:AAFt6-O5laMVRjO8hN1uA-dt7qZPPG0439c'
+TOKEN = '917181533:AAHB0gNsOFCw4nHYpRyrDGDfQQySzFu7YMI'
 bot = telebot.TeleBot(TOKEN)
 data = {}
 
@@ -25,7 +25,9 @@ def on_start(message: Message) -> None:
 @bot.inline_handler(func=lambda query: len(query.query) == 0)
 def default_query(query) -> None:
     response = InlineQueryResultArticle(
-        id='1', title='Название компании', input_message_content=InputTextMessageContent(message_text='Название компании'),
+        id='1', title='Название компании',
+        input_message_content=InputTextMessageContent(
+            message_text='Название компании'),
         description='Начните вводить название и выберете из предложеных вариантов')
     bot.answer_inline_query(inline_query_id=query.id, results=[response])
 
@@ -54,72 +56,80 @@ def query_get(query) -> None:
 
 
 # Output all reviews on current company
-@bot.message_handler(func=lambda message: (message.text)[0] == '/' and (message.text)[-1] == '/')
+@bot.message_handler(content_types=['text'])
 def get_reviews(message: Message) -> None:
-    user_message = (message.text)[1:-1]
-    bot.send_message(chat_id=message.chat.id,
-                     text='Подождите немного... Идет сбор данных')
-    print(user_message)
-    result_string = ''
+    if (message.text)[0] == '/' and (message.text)[-1] == '/':
+        user_message = (message.text)[1:-1]
+        bot.send_message(chat_id=message.chat.id,
+                         text='⌚️ Подождите немного... Идет сбор данных')
+        print(user_message)
+        result_string = ''
 
-    try:
-        final_dict = data[f'{message.chat.id}_parser'].get_ads(user_message)
-    except KeyError as k:
-        data[f'{message.chat.id}_parser'] = Parser()
-        final_dict = data[f'{message.chat.id}_parser'].get_ads(user_message)
+        try:
+            final_dict = data[f'{message.chat.id}_parser'].get_ads(
+                user_message)
+        except KeyError as k:
+            data[f'{message.chat.id}_parser'] = Parser()
+            final_dict = data[f'{message.chat.id}_parser'].get_ads(
+                user_message)
 
-    data[f'{message.chat.id}_final_dict'] = final_dict
+        data[f'{message.chat.id}_final_dict'] = final_dict
 
-    if data[f'{message.chat.id}_parser'].company_exist:
-        if data[f'{message.chat.id}_parser'].reviews_condition:
-            data[f'{message.chat.id}_prev'] = 0
-            data[f'{message.chat.id}_next'] = 5
-            final_dict = final_dict[data[f'{message.chat.id}_prev']
-                :data[f'{message.chat.id}_next']]
+        if data[f'{message.chat.id}_parser'].company_exist:
+            if data[f'{message.chat.id}_parser'].reviews_condition:
+                data[f'{message.chat.id}_prev'] = 0
+                data[f'{message.chat.id}_next'] = 5
 
-            for even in final_dict:
-                result_string += f"Дата: {even['date']}\nОткуда: {even['town_from']}\nКуда: {even['town_to']}\nОтзыв: {even['short']}\n\n"
+                prev_btn = data[f'{message.chat.id}_prev']
+                next_btn = data[f'{message.chat.id}_next']
+                final_dict = final_dict[prev_btn:next_btn]
+
+                for even in final_dict:
+                    result_string += f"📅 Дата: {even['date']}\n📍 Откуда: {even['town_from']}\n📍 Куда: {even['town_to']}\n📄 Отзыв: {even['short']}\n\n"
+                bot.delete_message(chat_id=message.chat.id,
+                                   message_id=message.message_id + 1)
+                bot.send_message(
+                    chat_id=message.chat.id, text=result_string,
+                    reply_markup=pagination_keyboard(prev_btn=False))
+            else:
+                bot.delete_message(chat_id=message.chat.id,
+                                   message_id=message.message_id + 1)
+                bot.send_message(chat_id=message.chat.id,
+                                 text='У данной компании нет отзывов\nПопробуйте еще раз ввести название', reply_markup=keyboard_switch_on_start())
+        else:
             bot.delete_message(chat_id=message.chat.id,
                                message_id=message.message_id + 1)
-            bot.send_message(
-                chat_id=message.chat.id, text=result_string, reply_markup=pagination_keyboard(prev_btn=False))
-        else:
             bot.send_message(chat_id=message.chat.id,
-                             text='У данной компании нет отзывов\nПопробуйте еще раз ввести название', reply_markup=keyboard_switch_on_start())
+                             text='Такой компании не существует\nПопробуйте еще раз ввести название', reply_markup=keyboard_switch_on_start())
+    # Else block
     else:
         bot.send_message(chat_id=message.chat.id,
-                         text='Такой компании не существует\nПопробуйте еще раз ввести название', reply_markup=keyboard_switch_on_start())
+                         text='Я Вас не понимаю... Введенный текст не корректен...')
 
 
 # Get all callbacks
 @bot.callback_query_handler(func=lambda call: True)
-def answer_callback(call: CallbackQuery):
+def answer_callback(call: CallbackQuery) -> None:
     # On previous button click
     if call.data == 'prev':
-        result_string = ''
         if data[f'{call.from_user.id}_prev'] - 5 <= 0:
             data[f'{call.from_user.id}_prev'] = 0
             data[f'{call.from_user.id}_next'] = 5
-
             keyboard = pagination_keyboard(prev_btn=False)
         elif data[f'{call.from_user.id}_prev'] - 5 > 0:
             data[f'{call.from_user.id}_prev'] -= 5
             data[f'{call.from_user.id}_next'] -= 5
-
             keyboard = pagination_keyboard()
 
         final_dict = data[f'{call.message.chat.id}_final_dict']
-        final_dict = final_dict[data[f'{call.message.chat.id}_prev']
-            :data[f'{call.message.chat.id}_next']]
-
-        for even in final_dict:
-            result_string += f"Дата: {even['date']}\nОткуда: {even['town_from']}\nКуда: {even['town_to']}\nОтзыв: {even['short']}\n\n"
-        bot.edit_message_text(text=result_string, chat_id=call.from_user.id,
-                              message_id=call.message.message_id, reply_markup=keyboard)
+        prev_btn = data[f'{call.message.chat.id}_prev']
+        next_btn = data[f'{call.message.chat.id}_next']
+        final_dict = final_dict[prev_btn:next_btn]
+        template_result_string(final_dict=final_dict,
+                               keyboard=keyboard, call=call)
 
     # On next button click
     if call.data == 'next':
-        result_string = ''
         final_dict = data[f'{call.message.chat.id}_final_dict']
 
         if len(final_dict) - data[f'{call.from_user.id}_next'] <= 5:
@@ -131,34 +141,46 @@ def answer_callback(call: CallbackQuery):
         elif data[f'{call.from_user.id}_next'] + 5 < len(final_dict):
             data[f'{call.from_user.id}_prev'] += 5
             data[f'{call.from_user.id}_next'] += 5
-            final_dict = final_dict[data[f'{call.message.chat.id}_prev']
-                :data[f'{call.message.chat.id}_next']]
+
+            prev_btn = data[f'{call.message.chat.id}_prev']
+            next_btn = data[f'{call.message.chat.id}_next']
+            final_dict = final_dict[prev_btn:next_btn]
 
             keyboard = pagination_keyboard()
         elif data[f'{call.from_user.id}_next'] + 5 == len(final_dict):
             data[f'{call.from_user.id}_prev'] += 5
             data[f'{call.from_user.id}_next'] += 5
-            final_dict = final_dict[data[f'{call.message.chat.id}_prev']
-                :data[f'{call.message.chat.id}_next']]
+
+            prev_btn = data[f'{call.message.chat.id}_prev']
+            next_btn = data[f'{call.message.chat.id}_next']
+            final_dict = final_dict[prev_btn:next_btn]
 
             keyboard = pagination_keyboard(next_btn=False)
         else:
             print('Else block. Next')
-            final_dict = final_dict[data[f'{call.message.chat.id}_prev']
-                :data[f'{call.message.chat.id}_next']]
+            prev_btn = data[f'{call.message.chat.id}_prev']
+            next_btn = data[f'{call.message.chat.id}_next']
+            final_dict = final_dict[prev_btn:next_btn]
+
             keyboard = pagination_keyboard(next_btn=False)
 
-        for even in final_dict:
-            result_string += f"Дата: {even['date']}\nОткуда: {even['town_from']}\nКуда: {even['town_to']}\nОтзыв: {even['short']}\n\n"
-        bot.edit_message_text(text=result_string, chat_id=call.from_user.id,
-                              message_id=call.message.message_id, reply_markup=keyboard)
+        template_result_string(final_dict=final_dict,
+                               keyboard=keyboard, call=call)
 
 
-# Else block
 @bot.message_handler(func=lambda message: True)
-def else_block(message: Message) -> None:
+def else_block(message):
     bot.send_message(chat_id=message.chat.id,
                      text='Я Вас не понимаю... Введите корректное значение...')
+
+
+def template_result_string(final_dict: dict, keyboard, call: CallbackQuery) -> None:
+    result_string = ''
+    for even in final_dict:
+        result_string += f"📅 Дата: {even['date']}\n📍 Откуда: {even['town_from']}\n📍 Куда: {even['town_to']}\n📄 Отзыв: {even['short']}\n\n"
+    bot.edit_message_text(text=result_string, chat_id=call.from_user.id,
+                          message_id=call.message.message_id, 
+                          reply_markup=keyboard)
 
 
 bot.polling(none_stop=True)

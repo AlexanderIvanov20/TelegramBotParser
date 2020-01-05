@@ -4,6 +4,7 @@ from datetime import datetime
 
 
 BASE_URL = 'https://lardi-trans.com/ajax/reliability_zone/firm/search/'
+ULTRA_BASE_URL = 'https://lardi-trans.com'
 HEADERS = {
     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.79 Safari/537.36'
 }
@@ -19,6 +20,83 @@ class Parser:
         # Add conditions
         self.reviews_condition = True
         self.company_exist = True
+
+    def parse_all(self):
+        # Initial url
+        urls = ['https://lardi-trans.com/reliability_zone/search_responses/?firmType=undefined&responseRate=all&page=']
+
+        response = self.__session.get(urls[0] + '1').content
+        soup = BeautifulSoup(response, 'lxml')
+
+        # Get max page
+        pages = int(soup.find('ul', attrs={
+            'class': 'pagination'
+        }).find_all('li')[-2].text.strip())
+
+        # Generate paginated pages
+        for item in range(1, pages + 1):
+            urls.append(urls[0] + f'{item}')
+
+        urls = urls[1:]
+
+        # For even url
+        for url in urls:
+            even_response = self.__session.get(url).content
+            even_soup = BeautifulSoup(even_response, 'lxml')
+
+            all_divs = even_soup.find('div', attrs={
+                'class': 'rz-feedback_tab-container'
+            }).find_all('div', attrs={
+                'class': 'rz-feedback_item'
+            })
+
+            # Get needed content
+            for div in all_divs:
+                date = div.find('span', attrs={
+                    'class': 'rz-feedback_service-date'
+                }).text.strip()
+                from_country = div.find('span', attrs={
+                    'class': 'rz-feedback_country-from'
+                }).text.strip()
+                to_country = div.find('span', attrs={
+                    'class': 'rz-feedback_country-to'
+                }).text.strip()
+                from_town = div.find('span', attrs={
+                    'class': 'rz-feedback_town-from'
+                }).text.strip()
+                to_town = div.find('span', attrs={
+                    'class': 'rz-feedback_town-to'
+                }).text.strip()
+                date_some = div.find('span', attrs={
+                    'class': 'rz-feedback_date'
+                }).text.strip()
+                date_some = format_date(date_some)
+
+                customer = div.find('div', attrs={
+                    'class': 'rz-feedback_service-performer'
+                }).find('div', attrs={
+                    'class': 'rz-feedback_service-person_name'
+                }).find('a').text.strip()
+                customer_link = ULTRA_BASE_URL + div.find('div', attrs={
+                    'class': 'rz-feedback_service-performer'
+                }).find('div', attrs={
+                    'class': 'rz-feedback_service-person_name'
+                }).find('a')['href']
+
+                client = div.find('div', attrs={
+                    'class': 'rz-feedback_service-client'
+                }).find('div', attrs={
+                    'class': 'rz-feedback_service-person_name'
+                }).find('a').text.strip()
+                client_link = ULTRA_BASE_URL + div.find('div', attrs={
+                    'class': 'rz-feedback_service-client'
+                }).find('div', attrs={
+                    'class': 'rz-feedback_service-person_name'
+                }).find('a')['href']
+
+                print(date, from_country, to_country, from_town,
+                      to_town, customer, customer_link, client, client_link,
+                      date_some)
 
     def get_variants(self, string: str) -> dict:
         encoded_string = requests.utils.quote(string)
@@ -101,3 +179,7 @@ def format_date(date_string: str) -> str:
     date = datetime.fromtimestamp(
         formated_date).strftime(r'%d-%m-%Y, %H:%M:%S')
     return date
+
+
+some_obj = Parser()
+some_obj.parse_all()
