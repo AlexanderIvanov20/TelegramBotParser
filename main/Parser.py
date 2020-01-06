@@ -1,5 +1,5 @@
 import requests
-import mysql.connector
+import mysql.connector as mysql_conn
 
 from bs4 import BeautifulSoup
 from datetime import datetime
@@ -10,6 +10,9 @@ ULTRA_BASE_URL = 'https://lardi-trans.com'
 HEADERS = {
     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.79 Safari/537.36'
 }
+CONNECTION = mysql_conn.connect(user='root', password='domestosroot50',
+                                host='localhost', database='database1',
+                                auth_plugin='mysql_native_password')
 
 
 class Parser:
@@ -23,10 +26,11 @@ class Parser:
         self.reviews_condition = True
         self.company_exist = True
 
-    def parse_all(self):
+    def parse_all(self) -> None:
         # Initial url
         urls = ['https://lardi-trans.com/reliability_zone/search_responses/?firmType=undefined&responseRate=all&page=']
 
+        # Do get request
         response = self.__session.get(urls[0] + '1').content
         soup = BeautifulSoup(response, 'lxml')
 
@@ -41,6 +45,7 @@ class Parser:
 
         urls = urls[1:]
 
+        count = 0
         # For even url
         for url in urls:
             even_response = self.__session.get(url).content
@@ -99,10 +104,19 @@ class Parser:
                 content_ad = div.find('div', attrs={
                     'class': 'rz-feedback__short'
                 }).text.strip()
+                if content_ad == '':
+                    content_ad = '-'
 
-                print(date, from_country, to_country, from_town,
-                      to_town, customer, customer_link, client, client_link,
-                      date_some, content_ad)
+                CURSOR = CONNECTION.cursor()
+                try:
+                    CURSOR.execute(
+                        f"INSERT INTO database1.telegram_parser_comment(town_from, town_to, posted, date, country_from, country_to, customer, customer_link, recipient, recipient_link, short) VALUES('{from_town}', '{to_town}', '{date_some}', '{date}', '{from_country}', '{to_country}', '{customer}', '{customer_link}', '{client}', '{client_link}', '{content_ad}')")
+                    CONNECTION.commit()
+                except Exception:
+                    pass
+                CURSOR.close()
+            print(count)
+            count += 1
 
     def get_variants(self, string: str) -> dict:
         encoded_string = requests.utils.quote(string)
@@ -127,8 +141,9 @@ class Parser:
     def get_paginated_links(self, soup: str, some_id: int) -> None:
         content_url = f'https://lardi-trans.com/reliability_zone/search_responses/?firmFromId={some_id}&'
         try:
-            pagination = int(soup.select('.pagination')[
-                0].find_all('li')[-2].find('a').text.strip())
+            pagination = int(soup.select(
+                '.pagination'
+            )[0].find_all('li')[-2].find('a').text.strip())
             print(pagination)
 
             self.PAGINATED_LINKS.append(content_url)
@@ -151,14 +166,18 @@ class Parser:
 
                 ads = soup.find_all('div', attrs={'class': 'rz-feedback_item'})
                 for ad in ads:
-                    date = ad.find(
-                        'span', attrs={'class': 'rz-feedback_date'}).text.strip()
-                    town_from = ad.find(
-                        'span', attrs={'class': 'rz-feedback_town-from'}).text.strip()
-                    town_to = ad.find(
-                        'span', attrs={'class': 'rz-feedback_town-to'}).text.strip()
-                    short = ad.find(
-                        'div', attrs={'class': 'rz-feedback__short'}).text.strip()
+                    date = ad.find('span', attrs={
+                        'class': 'rz-feedback_date'
+                    }).text.strip()
+                    town_from = ad.find('span', attrs={
+                        'class': 'rz-feedback_town-from'
+                    }).text.strip()
+                    town_to = ad.find('span', attrs={
+                        'class': 'rz-feedback_town-to'
+                    }).text.strip()
+                    short = ad.find('div', attrs={
+                        'class': 'rz-feedback__short'
+                    }).text.strip()
 
                     if short == '':
                         short = '-'
@@ -183,7 +202,7 @@ def format_date(date_string: str) -> str:
     formated_date = int(
         date_string[date_string.find("(") + 1:date_string.find(",") - 3])
     date = datetime.fromtimestamp(
-        formated_date).strftime(r'%d-%m-%Y, %H:%M:%S')
+        formated_date).strftime(r'%d.%m.%Y')
     return date
 
 
