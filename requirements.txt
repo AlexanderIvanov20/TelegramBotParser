@@ -1,0 +1,5 @@
+mysqlclient==1.4.6
+pyTelegramBotAPI==3.6.6
+requests==2.22.0
+beautifulsoup4==4.8.1
+bs4==0.0.1

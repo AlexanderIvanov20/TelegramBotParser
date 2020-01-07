@@ -3,6 +3,7 @@ import mysql.connector as mysql_conn
 
 from bs4 import BeautifulSoup
 from datetime import datetime
+from random import sample
 
 
 BASE_URL = 'https://lardi-trans.com/ajax/reliability_zone/firm/search/'
@@ -28,7 +29,9 @@ class Parser:
 
     def parse_all(self) -> None:
         # Initial url
-        urls = ['https://lardi-trans.com/reliability_zone/search_responses/?firmType=undefined&responseRate=all&page=']
+        urls = ['https://lardi-trans.com/reliability_zone/search_responses/?firmType=undefined&responseRate=positive&page=']
+        urls_1 = [
+            'https://lardi-trans.com/reliability_zone/search_responses/?firmType=undefined&responseRate=negative&page=']
 
         # Do get request
         response = self.__session.get(urls[0] + '1').content
@@ -42,12 +45,17 @@ class Parser:
         # Generate paginated pages
         for item in range(1, pages + 1):
             urls.append(urls[0] + f'{item}')
+            urls_1.append(urls_1[0] + f'{item}')
 
         urls = urls[1:]
+        urls_1 = urls_1[1:]
+        urls_2 = urls + urls_1
+        urls_2 = sample(urls_2, len(urls_2))
+        print(urls_2)
 
         count = 0
         # For even url
-        for url in urls:
+        for url in urls_2:
             even_response = self.__session.get(url).content
             even_soup = BeautifulSoup(even_response, 'lxml')
 
@@ -196,6 +204,15 @@ class Parser:
             self.company_exist = False
             print('Error. Company does not exist')
 
+    def get_by_url(self, url) -> str:
+        response = self.__session.get(url).content
+        soup = BeautifulSoup(response, 'lxml')
+
+        title = soup.find('td', attrs={
+            'id': 'firmTDName'
+        }).find('h1').text.strip().split(',')[0]
+        return title
+
 
 # Formate timestamp to usuall date
 def format_date(date_string: str) -> str:
@@ -206,5 +223,6 @@ def format_date(date_string: str) -> str:
     return date
 
 
-some_obj = Parser()
-some_obj.parse_all()
+parser = Parser()
+# parser.parse_all()
+parser.get_by_url('https://lardi-trans.com/user/17461603011/')
