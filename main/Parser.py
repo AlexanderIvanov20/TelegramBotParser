@@ -205,13 +205,22 @@ class Parser:
             print('Error. Company does not exist')
 
     def get_by_url(self, url) -> str:
-        response = self.__session.get(url).content
-        soup = BeautifulSoup(response, 'lxml')
+        try:
+            response = self.__session.get(url).content
+            soup = BeautifulSoup(response, 'lxml')
 
-        title = soup.find('td', attrs={
-            'id': 'firmTDName'
-        }).find('h1').text.strip().split(',')[0]
-        return title
+            basic = soup.find('td', attrs={
+                'id': 'firmTDName'
+            }).find('h1').text.strip().split(',')
+            title = basic[0]
+            type_company = basic[1].split()[0]
+
+            final = f'{title}, {type_company}'
+            self.company_exist = True
+            return final
+        except Exception as error:
+            self.company_exist = False
+            print(error)
 
 
 # Formate timestamp to usuall date
@@ -223,6 +232,6 @@ def format_date(date_string: str) -> str:
     return date
 
 
-parser = Parser()
-# parser.parse_all()
-parser.get_by_url('https://lardi-trans.com/user/17461603011/')
+# parser = Parser()
+# # parser.parse_all()
+# print(parser.get_by_url('https://lardi-trans.com/user/17461603011/'))
