@@ -11,7 +11,7 @@ from .forms import UserRegistrationForm, UserLoginForm
 class Register(View):
     def get(self, request):
         form = UserRegistrationForm()
-        return render(request, 'users/auth.html', {
+        return render(request, 'authform.html', {
             'title': 'Регистрация',
             'form': form,
             'action': 'register'
@@ -35,7 +35,7 @@ class Register(View):
 class Login(View):
     def get(self, request):
         form = AuthenticationForm()
-        return render(request, 'users/auth.html', {
+        return render(request, 'authform.html', {
             'title': 'Вход',
             'form': form,
             'action': 'login'

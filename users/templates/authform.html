@@ -1,0 +1,26 @@
+{% extends 'wrapper.html' %}
+
+{% load crispy_forms_tags %}
+
+{% block main %}
+
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-sm-12 col-md-8 col-lg-7 col-xl-6 m-4 p-3 border rounded">
+                <form action="" method="post">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    {% if action == 'register' %}
+                        <button type="submit" class="btn btn-outline-info">Зарегистрироваться</button>
+                    {% elif action == 'login' %}
+                        <a href="#" class="text-muted">Забыли пароль?</a>
+                        <br>
+                        <button type="submit" class="btn btn-outline-info mt-2">Войти</button>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+    </div>
+
+{% endblock main %}
+    
