@@ -4,6 +4,7 @@ from django.db import models
 
 
 class Profile(models.Model):
+    id_user = models.IntegerField()
     vip = models.BooleanField()
     activation_date = models.FloatField()
     activation_till = models.FloatField()
