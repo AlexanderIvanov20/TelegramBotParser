@@ -2,10 +2,21 @@
 
 
 {% block main %}
-
+<div class="container-fluid bg-secondary">
+    <div class="container py-2">
+        <div class="row justify-content-end">
+            <div class="btn-group" role="group" aria-label="Basic example">
+                <a href="{% url 'register' %}" class="btn btn-dark">Регистрация</a>
+                <a href="{% url 'authenticate' %}" class="btn btn-dark">Вход</a>
+            </div>
+        </div>
+    </div>
+</div>
 <div class="container bg-light border rounded mt-5 py-3">
-    <div class="row justify-content-center">
-        <h1 class="col-auto">Parser</h1>
+    <div class="row">
+        <div class="col-12 row justify-content-between">
+            <h1 class="col-auto">Parser</h1>
+        </div>
         <form action="" method="POST" class="col-12">
             <input type="text" name="search" id="" class="form-control">
         </form>
