@@ -16,4 +16,13 @@ class TelegramParserComment(models.Model):
 
     class Meta:
         managed = False
+        verbose_name = 'Комментарий'
+        verbose_name_plural = 'Комментарии'
         db_table = 'telegram_parser_comment'
+
+    def __str__(self):
+        return 'ID:{} | {} --> {}'.format(
+            self.id,
+            self.customer,
+            self.recipient
+        )

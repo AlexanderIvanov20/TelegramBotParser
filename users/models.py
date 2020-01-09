@@ -1,9 +1,10 @@
 from django.db import models
-
+from django.contrib.auth.models import User
 # Create your models here.
 
 
 class Profile(models.Model):
+    id_user = models.IntegerField()
     vip = models.BooleanField()
     activation_date = models.FloatField()
     activation_till = models.FloatField()

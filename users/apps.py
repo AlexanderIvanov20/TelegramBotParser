@@ -5,5 +5,5 @@ class UsersConfig(AppConfig):
     name = 'users'
     verbose_name = 'Профили'
 
-    def ready(self):
-        import users.signals
+    # def ready(self):
+    #     import users.signals
