@@ -1,11 +1,13 @@
 <div class="container-fluid bg-secondary">
     <div class="container py-2">
         <div class="row justify-content-end">
-            
             {% if user.is_authenticated %}
-                asdf
-            {% else %}
                 <div class="btn-group" role="group" aria-label="Basic example">
+                    <a href="{% url 'admin:index' %}" class="btn btn-dark">Админ-Панель</a>
+                    <a href="{% url 'logout' %}" class="btn btn-dark">Выход</a>
+                </div>
+            {% else %}
+                <div class="btn-group" role="group" aria-label="Basic example"></div>
                     <a href="{% url 'register' %}" class="btn btn-dark">Регистрация</a>
                     <a href="{% url 'authenticate' %}" class="btn btn-dark">Вход</a>
                 </div>

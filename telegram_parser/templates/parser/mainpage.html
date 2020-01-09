@@ -4,7 +4,7 @@
 {% block main %}
 {% include 'header.html' %}
 <div class="container bg-light border rounded mt-5 py-3">
-    <div class="row">
+    <div class="row mb-3">
         <div class="col-12 row justify-content-between">
             <h1 class="col-auto">Parser</h1>
         </div>
@@ -12,6 +12,27 @@
             <input type="text" name="search" id="" class="form-control">
         </form>
     </div>
+    {% for comment in comments %}
+    <div class="containter-fluid bg-light border rounded my-3">
+        <div class="containter-fluid bg-secondary rounded-top p-2">{{ comment.posted }} | {{ comment.country_from }} - {{ comment.country_from }} | {{ comment.town_from }} - {{ comment.town_to }}</div>
+        <div class="containter-fluid row justify-content-between pl-2 pb-2">
+            <div class="col-3">
+                {{ comment.customer }}
+            </div>
+            <div class="col-1">>></div>
+            <div class="col-3">
+                {{ comment.recipient }}
+            </div>
+            <div class="col-4">
+                {{ comment.short }}
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-danger">*</button>
+            </div>
+        </div>
+        
+    </div>
+    {% endfor %}
 </div>
 
 {% endblock main %}
