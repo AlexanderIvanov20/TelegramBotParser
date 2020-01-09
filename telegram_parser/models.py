@@ -1,11 +1,11 @@
 from django.db import models
 
 
-class Comment(models.Model):
+class TelegramParserComment(models.Model):
     town_from = models.CharField(max_length=500)
     town_to = models.CharField(max_length=500)
     posted = models.CharField(max_length=500)
-    date = models.DateField(max_length=500)
+    date = models.DateField()
     country_from = models.CharField(max_length=500)
     country_to = models.CharField(max_length=500)
     customer = models.CharField(max_length=500)
@@ -13,3 +13,16 @@ class Comment(models.Model):
     recipient = models.CharField(max_length=500)
     recipient_link = models.CharField(max_length=500)
     short = models.CharField(max_length=600)
+
+    class Meta:
+        managed = False
+        verbose_name = 'Комментарий'
+        verbose_name_plural = 'Комментарии'
+        db_table = 'telegram_parser_comment'
+
+    def __str__(self):
+        return 'ID:{} | {} --> {}'.format(
+            self.id,
+            self.customer,
+            self.recipient
+        )

@@ -14,6 +14,8 @@
 
 # Debug DB
 db.sqlite3
+.sql
+.pgsql
 
 # Settings & configs & scripts
 local_settings.py
