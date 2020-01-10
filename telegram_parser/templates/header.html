@@ -1,17 +1,27 @@
 <div class="container-fluid bg-secondary">
     <div class="container py-2">
-        <div class="row justify-content-end">
+        <div class="row justify-content-between">
+            <a href="{% url 'index' %}" class="text-reset"><h1 class="col-auto">Parser</h1></a>
+            <div class="col-auto">
             {% if user.is_authenticated %}
                 <div class="btn-group" role="group" aria-label="Basic example">
                     <a href="{% url 'admin:index' %}" class="btn btn-dark">Админ-Панель</a>
+                    <a href="{% url 'profiles' %}" class="btn btn-dark">Пользователи</a>
                     <a href="{% url 'logout' %}" class="btn btn-dark">Выход</a>
                 </div>
             {% else %}
-                <div class="btn-group" role="group" aria-label="Basic example"></div>
+                <div class="btn-group" role="group" aria-label="Basic example">
                     <a href="{% url 'register' %}" class="btn btn-dark">Регистрация</a>
                     <a href="{% url 'authenticate' %}" class="btn btn-dark">Вход</a>
                 </div>
             {% endif %}
+            </div>
         </div>
     </div>
 </div>
+<!-- Message handler -->
+{% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{message.tags}} m-3">{{ message }}</div>
+    {% endfor %}
+{% endif %}

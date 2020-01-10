@@ -52,6 +52,7 @@ class Login(View):
                 login(request, user)
             else:
                 messages.warning(request, 'Ошибка')
+                return redirect('authenticate')
         return redirect('index')
 
 
