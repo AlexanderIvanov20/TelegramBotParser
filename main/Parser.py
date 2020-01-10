@@ -29,8 +29,7 @@ class Parser:
 
     def parse_all(self) -> None:
         # Initial url
-        urls = ['https://lardi-trans.com/reliability_zone/search_responses/?firmType=undefined&responseRate=positive&page=']
-        urls_1 = [
+        urls = [
             'https://lardi-trans.com/reliability_zone/search_responses/?firmType=undefined&responseRate=negative&page=']
 
         # Do get request
@@ -45,17 +44,16 @@ class Parser:
         # Generate paginated pages
         for item in range(1, pages + 1):
             urls.append(urls[0] + f'{item}')
-            urls_1.append(urls_1[0] + f'{item}')
 
         urls = urls[1:]
-        urls_1 = urls_1[1:]
-        urls_2 = urls + urls_1
-        urls_2 = sample(urls_2, len(urls_2))
-        print(urls_2)
+        # urls_1 = urls_1[1:]
+        # urls_2 = urls + urls_1
+        # urls_2 = sample(urls_2, len(urls_2))
+        # print(urls_2)
 
         count = 0
         # For even url
-        for url in urls_2:
+        for url in urls:
             even_response = self.__session.get(url).content
             even_soup = BeautifulSoup(even_response, 'lxml')
 
@@ -161,48 +159,6 @@ class Parser:
             self.PAGINATED_LINKS = [content_url]
             # self.reviews_condition = False
             print('No paginated pages')
-
-    def get_ads(self, string: str) -> list:
-        result_list = []
-        try:
-            soup, some_id = self.initial_request(string)
-            self.get_paginated_links(soup, some_id)
-
-            for item in self.PAGINATED_LINKS:
-                response = self.__session.get(item).content
-                soup = BeautifulSoup(response, 'lxml')
-
-                ads = soup.find_all('div', attrs={'class': 'rz-feedback_item'})
-                for ad in ads:
-                    date = ad.find('span', attrs={
-                        'class': 'rz-feedback_date'
-                    }).text.strip()
-                    town_from = ad.find('span', attrs={
-                        'class': 'rz-feedback_town-from'
-                    }).text.strip()
-                    town_to = ad.find('span', attrs={
-                        'class': 'rz-feedback_town-to'
-                    }).text.strip()
-                    short = ad.find('div', attrs={
-                        'class': 'rz-feedback__short'
-                    }).text.strip()
-
-                    if short == '':
-                        short = '-'
-
-                    result_list.append({
-                        'date': format_date(date),
-                        'town_from': town_from,
-                        'town_to': town_to,
-                        'short': short
-                    })
-            if result_list != []:
-                return result_list
-            else:
-                self.reviews_condition = False
-        except TypeError:
-            self.company_exist = False
-            print('Error. Company does not exist')
 
     def get_by_url(self, url) -> str:
         try:
