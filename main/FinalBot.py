@@ -1,5 +1,6 @@
 import telebot
 import mysql.connector as mysql_connector
+import json
 
 from telebot.types import *
 from Parser import *
@@ -27,6 +28,13 @@ PROVIDER_TOKEN = '632593626:TEST:i56982357197'
 DATA = {}
 
 
+# Texts to answer of bot
+def all_text():
+    with open('Texts.json', 'r', encoding='utf-8') as file:
+        data_text = json.load(file)
+    return data_text
+
+
 # Check subcription till
 def check_date(chat_id):
     today_now = datetime.timestamp(datetime.now())
@@ -43,13 +51,29 @@ def check_date(chat_id):
         CONNECTION.commit()
 
 
+# Check on 1 request
+def check_today(chat_id):
+    today_now = datetime.timestamp(datetime.now())
+    try:
+        till_date_today = DATA[f'{chat_id}_today_till']
+
+        if today_now > till_date_today:
+            del DATA[f'{chat_id}_today_till']
+            DATA[f'{chat_id}_count_requests'] = 0
+    except KeyError:
+        pass
+
+
 @BOT.message_handler(commands=['start'])
 def on_start(message: Message) -> None:
+    print(all_text())
+
     parser = Parser()
     DATA[f'{message.chat.id}_parser'] = parser
     DATA[f'{message.chat.id}_count_requests'] = 0
 
     check_date(chat_id=message.chat.id)
+    check_today(chat_id=message.chat.id)
 
     # Try to get a user
     CURSOR.execute("SELECT * FROM database1.users_profile "
@@ -65,7 +89,7 @@ def on_start(message: Message) -> None:
 
     keyboard = main_keyboard()
     BOT.send_message(chat_id=message.chat.id,
-                     text='Выбере нужный Вам пункт', reply_markup=keyboard)
+                     text=all_text()['greeting'], reply_markup=keyboard)
 
 
 # If inline query is null
@@ -133,6 +157,7 @@ def got_payment(message: Message) -> None:
 @BOT.message_handler(content_types=['text'])
 def get_company(message: Message) -> None:
     check_date(chat_id=message.chat.id)
+    check_today(chat_id=message.chat.id)
     if message.text[0] == '/' and message.text[-1] == '/':
         # Slice a text of message
         user_message = message.text[1:-1]
@@ -160,6 +185,10 @@ def get_company(message: Message) -> None:
                     result_string += f"🏙️ Города перевозки: {even_comment[1]} - {even_comment[2]}\n📅 Дата перевозки: {even_comment[3]}\n⏰ Дата размещения отзыва: {even_comment[4]}\n🏳️ Страны перевозки: {even_comment[5]} - {even_comment[6]}\n👨Заказчик: {even_comment[7]}\n🔗 Заказчик(ссылка): {even_comment[8]}\n👨 Перевозчик: {even_comment[9]}\n🔗 Перевозчик(ссылка): {even_comment[10]}\n📰 Текст отзыва: {even_comment[11]}\n\n"
 
                 DATA[f'{message.chat.id}_count_requests'] += 1
+                if f'{message.chat.id}_today_till' not in DATA.keys():
+                    DATA[f'{message.chat.id}_today_till'] = datetime.timestamp(
+                        datetime.now() + timedelta(1)
+                    )
                 BOT.send_message(chat_id=message.chat.id, text=result_string,
                                  disable_web_page_preview=True,
                                  reply_markup=bottom_menu())
@@ -170,6 +199,12 @@ def get_company(message: Message) -> None:
                         result_string += f"🏙️ Города перевозки: {even_comment[1]} - {even_comment[2]}\n📅 Дата перевозки: {even_comment[3]}\n⏰ Дата размещения отзыва: {even_comment[4]}\n🏳️ Страны перевозки: {even_comment[5]} - {even_comment[6]}\n👨Заказчик: {even_comment[7]}\n🔗 Заказчик(ссылка): {even_comment[8]}\n👨 Перевозчик: {even_comment[9]}\n🔗 Перевозчик(ссылка): {even_comment[10]}\n📰 Текст отзыва: {even_comment[11]}\n\n"
 
                     DATA[f'{message.chat.id}_count_requests'] += 1
+                    if f'{message.chat.id}_today_till' not in DATA.keys():
+                        DATA[
+                            f'{message.chat.id}_today_till'
+                        ] = datetime.timestamp(
+                            datetime.now() + timedelta(1)
+                        )
                     BOT.send_message(chat_id=message.chat.id,
                                      text=result_string,
                                      disable_web_page_preview=True,
@@ -193,6 +228,7 @@ def get_company(message: Message) -> None:
 # Get link on a company and and take all comments about it
 def get_url(message: Message) -> None:
     check_date(chat_id=message.chat.id)
+    check_today(chat_id=message.chat.id)
     user_message = DATA[
         f'{message.from_user.id}_parser'
     ].get_by_url(message.text)
@@ -209,10 +245,12 @@ def get_url(message: Message) -> None:
     print(current_comments)
 
     # Check on existing company
-    if DATA[f'{message.from_user.id}_parser'].company_exist is False:
+    if DATA[f'{message.from_user.id}_parser'].company_exist is False or current_comments == [] or current_comments is None:
         keyboard = main_keyboard()
         BOT.send_message(chat_id=message.chat.id,
-                         text='Компания не найдена. Попробуйте еще раз',
+                         text='Компания не найдена или '
+                              'отзывов на нее в нашей базе нет. '
+                              'Попробуйте еще раз',
                          reply_markup=keyboard)
     else:
         if current_user[1] == 1:
@@ -221,6 +259,10 @@ def get_url(message: Message) -> None:
                 result_string += f"🏙️ Города перевозки: {even_comment[1]} - {even_comment[2]}\n📅 Дата перевозки: {even_comment[3]}\n⏰ Дата размещения отзыва: {even_comment[4]}\n🏳️ Страны перевозки: {even_comment[5]} - {even_comment[6]}\n👨Заказчик: {even_comment[7]}\n🔗 Заказчик(ссылка): {even_comment[8]}\n👨 Перевозчик: {even_comment[9]}\n🔗 Перевозчик(ссылка): {even_comment[10]}\n📰 Текст отзыва: {even_comment[11]}\n\n"
 
             DATA[f'{message.chat.id}_count_requests'] += 1
+            if f'{message.chat.id}_today_till' not in DATA.keys():
+                DATA[f'{message.chat.id}_today_till'] = datetime.timestamp(
+                    datetime.now() + timedelta(1)
+                )
             BOT.send_message(chat_id=message.chat.id, text=result_string,
                              disable_web_page_preview=True,
                              reply_markup=bottom_menu())
@@ -231,6 +273,10 @@ def get_url(message: Message) -> None:
                     result_string += f"🏙️ Города перевозки: {even_comment[1]} - {even_comment[2]}\n📅 Дата перевозки: {even_comment[3]}\n⏰ Дата размещения отзыва: {even_comment[4]}\n🏳️ Страны перевозки: {even_comment[5]} - {even_comment[6]}\n👨Заказчик: {even_comment[7]}\n🔗 Заказчик(ссылка): {even_comment[8]}\n👨 Перевозчик: {even_comment[9]}\n🔗 Перевозчик(ссылка): {even_comment[10]}\n📰 Текст отзыва: {even_comment[11]}\n\n"
 
                 DATA[f'{message.chat.id}_count_requests'] += 1
+                if f'{message.chat.id}_today_till' not in DATA.keys():
+                    DATA[f'{message.chat.id}_today_till'] = datetime.timestamp(
+                        datetime.now() + timedelta(1)
+                    )
                 BOT.send_message(chat_id=message.chat.id, text=result_string,
                                  disable_web_page_preview=True,
                                  reply_markup=bottom_menu())
@@ -246,6 +292,7 @@ def get_url(message: Message) -> None:
 @BOT.callback_query_handler(func=lambda call: True)
 def get_calls(call: CallbackQuery) -> None:
     check_date(chat_id=call.from_user.id)
+    check_today(chat_id=call.from_user.id)
     if call.data == 'by_link':
         # Get link it self
         some = BOT.send_message(chat_id=call.from_user.id,
