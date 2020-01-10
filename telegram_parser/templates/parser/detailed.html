@@ -1,0 +1,26 @@
+{% extends 'wrapper.html' %}
+
+
+{% block main %}
+    {% include 'header.html' %}
+    <div class="container">
+        <div class="containter-fluid bg-light border rounded my-3">
+            <div class="containter-fluid bg-secondary rounded-top p-2"><a href="{% url 'detailed' comment_id=comment.id %}" class="text-reset">{{ comment.posted }} | {{ comment.country_from }} - {{ comment.country_from }} | {{ comment.town_from }} - {{ comment.town_to }}</a></div>
+            <div class="containter-fluid row justify-content-between pl-2 pb-2">
+                <div class="col-3">
+                    <a href="{{ comment.customer_link }}">{{ comment.customer }}</a>
+                </div>
+                <div class="col-1">>></div>
+                <div class="col-3">
+                    <a href="{{ comment.recipient_link }}">{{ comment.recipient }}</a>
+                </div>
+                <div class="col-4">
+                    {{ comment.short }}
+                </div>
+                <div class="col-auto">
+                    <button class="btn btn-danger">*</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock main %}
