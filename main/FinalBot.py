@@ -66,8 +66,6 @@ def check_today(chat_id):
 
 @BOT.message_handler(commands=['start'])
 def on_start(message: Message) -> None:
-    print(all_text())
-
     parser = Parser()
     DATA[f'{message.chat.id}_parser'] = parser
     DATA[f'{message.chat.id}_count_requests'] = 0
@@ -136,7 +134,7 @@ def query_get(query: InlineQuery) -> None:
 def got_payment(message: Message) -> None:
     # Get now-time, set now + 30 days
     now_time = datetime.timestamp(datetime.now())
-    through_month = datetime.timestamp(datetime.now() + timedelta(30))
+    through_month = datetime.timestamp(datetime.now() + timedelta(days=30))
     print(message)
 
     # Take to user vip-subscription
@@ -187,7 +185,7 @@ def get_company(message: Message) -> None:
                 DATA[f'{message.chat.id}_count_requests'] += 1
                 if f'{message.chat.id}_today_till' not in DATA.keys():
                     DATA[f'{message.chat.id}_today_till'] = datetime.timestamp(
-                        datetime.now() + timedelta(1)
+                        datetime.now() + timedelta(days=1)
                     )
                 BOT.send_message(chat_id=message.chat.id, text=result_string,
                                  disable_web_page_preview=True,
@@ -203,7 +201,7 @@ def get_company(message: Message) -> None:
                         DATA[
                             f'{message.chat.id}_today_till'
                         ] = datetime.timestamp(
-                            datetime.now() + timedelta(1)
+                            datetime.now() + timedelta(days=1)
                         )
                     BOT.send_message(chat_id=message.chat.id,
                                      text=result_string,
@@ -216,7 +214,7 @@ def get_company(message: Message) -> None:
                                      'бесконечно в течении месяца, либо '
                                      'подождите до завтра.',
                                      reply_markup=no_vip_keyboard())
-    elif message.text == 'Вывести меню':
+    elif message.text == '📄 Вывести меню':
         keyboard = main_keyboard()
         BOT.send_message(chat_id=message.chat.id,
                          text='Выбере нужный Вам пункт', reply_markup=keyboard)
@@ -229,9 +227,11 @@ def get_company(message: Message) -> None:
 def get_url(message: Message) -> None:
     check_date(chat_id=message.chat.id)
     check_today(chat_id=message.chat.id)
-    user_message = DATA[
-        f'{message.from_user.id}_parser'
-    ].get_by_url(message.text)
+
+    # Get user message and check it
+    user_message = message.text
+    if user_message[-1] != '/':
+        user_message += '/'
 
     # Get user
     CURSOR.execute("SELECT * FROM database1.users_profile "
@@ -240,12 +240,12 @@ def get_url(message: Message) -> None:
 
     # Get all comments on current company
     CURSOR.execute(f"SELECT * FROM database1.telegram_parser_comment "
-                   f"WHERE recipient='{user_message}';")
+                   f"WHERE recipient_link='{user_message}';")
     current_comments = CURSOR.fetchall()
     print(current_comments)
 
     # Check on existing company
-    if DATA[f'{message.from_user.id}_parser'].company_exist is False or current_comments == [] or current_comments is None:
+    if current_comments == []:
         keyboard = main_keyboard()
         BOT.send_message(chat_id=message.chat.id,
                          text='Компания не найдена или '
@@ -261,7 +261,7 @@ def get_url(message: Message) -> None:
             DATA[f'{message.chat.id}_count_requests'] += 1
             if f'{message.chat.id}_today_till' not in DATA.keys():
                 DATA[f'{message.chat.id}_today_till'] = datetime.timestamp(
-                    datetime.now() + timedelta(1)
+                    datetime.now() + timedelta(days=1)
                 )
             BOT.send_message(chat_id=message.chat.id, text=result_string,
                              disable_web_page_preview=True,
@@ -275,7 +275,7 @@ def get_url(message: Message) -> None:
                 DATA[f'{message.chat.id}_count_requests'] += 1
                 if f'{message.chat.id}_today_till' not in DATA.keys():
                     DATA[f'{message.chat.id}_today_till'] = datetime.timestamp(
-                        datetime.now() + timedelta(1)
+                        datetime.now() + timedelta(days=1)
                     )
                 BOT.send_message(chat_id=message.chat.id, text=result_string,
                                  disable_web_page_preview=True,
@@ -293,6 +293,7 @@ def get_url(message: Message) -> None:
 def get_calls(call: CallbackQuery) -> None:
     check_date(chat_id=call.from_user.id)
     check_today(chat_id=call.from_user.id)
+
     if call.data == 'by_link':
         # Get link it self
         some = BOT.send_message(chat_id=call.from_user.id,
@@ -309,6 +310,26 @@ def get_calls(call: CallbackQuery) -> None:
                          is_flexible=False, prices=PRICES,
                          start_parameter='subscription-example',
                          invoice_payload='HAPPY FRIDAYS COUPON')
+
+    elif call.data == 'vip':
+        CURSOR.execute(
+            'SELECT * FROM database1.users_profile '
+            f'WHERE id_user={call.from_user.id};'
+        )
+        current_user = CURSOR.fetchone()
+
+        string = ''
+
+        if current_user[1] == 0:
+            string += '👑 VIP:  `Нет`\n'
+        else:
+            string += '👑 VIP:  `Есть`\n'
+
+        string += (f'День активации:  `{current_user[2]}`\n'
+                   f'Окончание подписки:  `{current_user[3]}`\n')
+        BOT.send_message(chat_id=call.from_user.id,
+                         text=string, parse_mode='Markdown',
+                         reply_markup=no_vip_keyboard())
 
 
 # Get all shipping query
