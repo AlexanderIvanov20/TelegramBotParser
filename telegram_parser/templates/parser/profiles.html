@@ -1,13 +1,18 @@
 {% extends 'wrapper.html' %}
-
+{% load custom_filters %}
 
 {% block main %}
 
     {% include 'header.html' %}
     <div class="container bg-light border rounded mt-5 py-3">
+        <h2>{{ title }}</h2>
         {% for profile in profiles %}
             <div class="containter-fluid bg-light border rounded my-3">
-                n
+                <div class="col-auto">ID: {{ profile.id_user }}</div>
+                <div class="col-auto">Вип статус: {{ profile.vip }}</div>
+                <div class="col-auto">Подписка: {{ profile.subscription }}</div>
+                <div class="col-auto">Дата активации: {{ profile.activation_date|to_datetime }}</div>
+                <div class="col-auto">Дата окончания: {{ profile.activation_till|to_datetime }}</div>
             </div>
         {% endfor %}    
     </div>

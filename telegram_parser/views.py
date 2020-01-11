@@ -34,6 +34,7 @@ def detailed(request, comment_id):
 def profiles(request):
     profiles = Profile.objects.all()
     context = {
-        'title': 'Профили'
+        'title': 'Профили',
+        'profiles': profiles
     }
     return render(request, 'parser/profiles.html', context)

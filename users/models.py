@@ -22,6 +22,7 @@ class Activation(models.Model):
 class Profile(models.Model):
     id_user = models.IntegerField()
     vip = models.BooleanField()
+    subscription = models.BooleanField()
     activation_date = models.FloatField()
     activation_till = models.FloatField()
 
@@ -32,4 +33,4 @@ class Profile(models.Model):
         db_table = 'profiles'
 
     def __str__(self):
-        return (f'Профиль пользователя {self.user}')
+        return (f'Профиль пользователя {self.id_user}')
