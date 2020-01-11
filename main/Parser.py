@@ -9,7 +9,9 @@ from random import sample
 BASE_URL = 'https://lardi-trans.com/ajax/reliability_zone/firm/search/'
 ULTRA_BASE_URL = 'https://lardi-trans.com'
 HEADERS = {
-    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.79 Safari/537.36'
+    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/'
+                  '537.36 (KHTML, like Gecko) Chrome/79.0.3945.79 '
+                  'Safari/537.36'
 }
 CONNECTION = mysql_conn.connect(user='root', password='domestosroot50',
                                 host='localhost', database='database1',
@@ -30,7 +32,9 @@ class Parser:
     def parse_all(self) -> None:
         # Initial url
         urls = [
-            'https://lardi-trans.com/reliability_zone/search_responses/?firmType=undefined&responseRate=negative&page=']
+            'https://lardi-trans.com/reliability_zone/search_responses/'
+            '?firmType=undefined&responseRate=negative&page='
+        ]
 
         # Do get request
         response = self.__session.get(urls[0] + '1').content
@@ -46,13 +50,10 @@ class Parser:
             urls.append(urls[0] + f'{item}')
 
         urls = urls[1:]
-        # urls_1 = urls_1[1:]
-        # urls_2 = urls + urls_1
-        # urls_2 = sample(urls_2, len(urls_2))
-        # print(urls_2)
 
         count = 0
         # For even url
+        CURSOR = CONNECTION.cursor()
         for url in urls:
             even_response = self.__session.get(url).content
             even_soup = BeautifulSoup(even_response, 'lxml')
@@ -113,16 +114,112 @@ class Parser:
                 if content_ad == '':
                     content_ad = '-'
 
-                CURSOR = CONNECTION.cursor()
                 try:
                     CURSOR.execute(
-                        f"INSERT INTO database1.telegram_parser_comment(town_from, town_to, posted, date, country_from, country_to, customer, customer_link, recipient, recipient_link, short) VALUES('{from_town}', '{to_town}', '{date_some}', '{date}', '{from_country}', '{to_country}', '{customer}', '{customer_link}', '{client}', '{client_link}', '{content_ad}')")
+                        "INSERT INTO database1.telegram_parser_comment"
+                        "(town_from, town_to, posted, date, country_from, "
+                        "country_to, customer, customer_link, recipient, "
+                        f"recipient_link, short) VALUES('{from_town}', "
+                        f"'{to_town}', '{date_some}', '{date}', "
+                        f"'{from_country}', '{to_country}', '{customer}', "
+                        f"'{customer_link}', '{client}', '{client_link}', "
+                        f"'{content_ad}')"
+                    )
                     CONNECTION.commit()
                 except Exception:
                     pass
-                CURSOR.close()
             print(count)
             count += 1
+        CURSOR.close()
+
+    def additional_pages(self):
+        url = ('https://lardi-trans.com/reliability_zone/search_responses/'
+               '?firmType=undefined&responseRate=negative&page=1')
+
+        # Do get request
+        response = self.__session.get(url).content
+        soup = BeautifulSoup(response, 'lxml')
+
+        # Get all cooments on page
+        all_divs = soup.find('div', attrs={
+            'class': 'rz-feedback_tab-container'
+        }).find_all('div', attrs={
+            'class': 'rz-feedback_item'
+        })
+
+        # Create cursor
+        CURSOR = CONNECTION.cursor(buffered=True)
+
+        # Get needed content
+        for div in all_divs:
+            date = div.find('span', attrs={
+                'class': 'rz-feedback_service-date'
+            }).text.strip()
+            from_country = div.find('span', attrs={
+                'class': 'rz-feedback_country-from'
+            }).text.strip()
+            to_country = div.find('span', attrs={
+                'class': 'rz-feedback_country-to'
+            }).text.strip()
+            from_town = div.find('span', attrs={
+                'class': 'rz-feedback_town-from'
+            }).text.strip()
+            to_town = div.find('span', attrs={
+                'class': 'rz-feedback_town-to'
+            }).text.strip()
+            date_some = div.find('span', attrs={
+                'class': 'rz-feedback_date'
+            }).text.strip()
+            date_some = format_date(date_some)
+
+            customer = div.find('div', attrs={
+                'class': 'rz-feedback_service-performer'
+            }).find('div', attrs={
+                'class': 'rz-feedback_service-person_name'
+            }).find('a').text.strip()
+            customer_link = ULTRA_BASE_URL + div.find('div', attrs={
+                'class': 'rz-feedback_service-performer'
+            }).find('div', attrs={
+                'class': 'rz-feedback_service-person_name'
+            }).find('a')['href']
+
+            client = div.find('div', attrs={
+                'class': 'rz-feedback_service-client'
+            }).find('div', attrs={
+                'class': 'rz-feedback_service-person_name'
+            }).find('a').text.strip()
+            client_link = ULTRA_BASE_URL + div.find('div', attrs={
+                'class': 'rz-feedback_service-client'
+            }).find('div', attrs={
+                'class': 'rz-feedback_service-person_name'
+            }).find('a')['href']
+
+            content_ad = div.find('div', attrs={
+                'class': 'rz-feedback__short'
+            }).text.strip()
+            if content_ad == '':
+                content_ad = '-'
+
+            CURSOR.execute(
+                'SELECT * FROM database1.telegram_parser_comment '
+                f"WHERE short='{content_ad}';"
+            )
+            current_short = CURSOR.fetchone()
+
+            # Check on exist
+            if current_short is None:
+                CURSOR.execute(
+                    "INSERT INTO database1.telegram_parser_comment(town_from, "
+                    "town_to, posted, date, country_from, country_to, "
+                    "customer, customer_link, recipient, recipient_link, "
+                    f"short) VALUES('{from_town}', '{to_town}', "
+                    f"'{date_some}', '{date}', '{from_country}', "
+                    f"'{to_country}', '{customer}', '{customer_link}', "
+                    f"'{client}', '{client_link}', '{content_ad}')"
+                )
+                CONNECTION.commit()
+                print('Write...')
+        CURSOR.close()
 
     def get_variants(self, string: str) -> dict:
         encoded_string = requests.utils.quote(string)
@@ -136,7 +233,8 @@ class Parser:
 
         try:
             response = response['items'][0]['owner']['id']
-            content_url = f'https://lardi-trans.com/reliability_zone/search_responses/?firmFromId={response}&'
+            content_url = ('https://lardi-trans.com/reliability_zone/'
+                           f'search_responses/?firmFromId={response}&')
             response_content = self.__session.get(content_url).content
             soup = BeautifulSoup(response_content, 'lxml')
             return soup, response
@@ -145,7 +243,8 @@ class Parser:
             print('Error. Message uncorrect')
 
     def get_paginated_links(self, soup: str, some_id: int) -> None:
-        content_url = f'https://lardi-trans.com/reliability_zone/search_responses/?firmFromId={some_id}&'
+        content_url = ('https://lardi-trans.com/reliability_zone/'
+                       f'search_responses/?firmFromId={some_id}&')
         try:
             pagination = int(soup.select(
                 '.pagination'
@@ -160,34 +259,18 @@ class Parser:
             # self.reviews_condition = False
             print('No paginated pages')
 
-    def get_by_url(self, url) -> str:
-        try:
-            response = self.__session.get(url).content
-            soup = BeautifulSoup(response, 'lxml')
-
-            basic = soup.find('td', attrs={
-                'id': 'firmTDName'
-            }).find('h1').text.strip().split(',')
-            title = basic[0]
-            type_company = basic[1].split()[0]
-
-            final = f'{title}, {type_company}'
-            self.company_exist = True
-            return final
-        except Exception as error:
-            self.company_exist = False
-            print(error)
-
 
 # Formate timestamp to usuall date
 def format_date(date_string: str) -> str:
     formated_date = int(
-        date_string[date_string.find("(") + 1:date_string.find(",") - 3])
+        date_string[date_string.find("(") + 1:date_string.find(",") - 3]
+    )
     date = datetime.fromtimestamp(
-        formated_date).strftime(r'%d.%m.%Y')
+        formated_date
+    ).strftime(r'%d.%m.%Y')
     return date
 
 
 # parser = Parser()
-# # parser.parse_all()
-# print(parser.get_by_url('https://lardi-trans.com/user/17461603011/'))
+# parser.parse_all()
+# parser.additional_pages()
