@@ -9,7 +9,9 @@ from random import sample
 BASE_URL = 'https://lardi-trans.com/ajax/reliability_zone/firm/search/'
 ULTRA_BASE_URL = 'https://lardi-trans.com'
 HEADERS = {
-    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.79 Safari/537.36'
+    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/'
+                  '537.36 (KHTML, like Gecko) Chrome/79.0.3945.79 '
+                  'Safari/537.36'
 }
 CONNECTION = mysql_conn.connect(user='root', password='domestosroot50',
                                 host='localhost', database='database1',
@@ -30,7 +32,8 @@ class Parser:
     def parse_all(self) -> None:
         # Initial url
         urls = [
-            'https://lardi-trans.com/reliability_zone/search_responses/?firmType=undefined&responseRate=negative&page='
+            'https://lardi-trans.com/reliability_zone/search_responses/'
+            '?firmType=undefined&responseRate=negative&page='
         ]
 
         # Do get request
@@ -113,7 +116,15 @@ class Parser:
 
                 try:
                     CURSOR.execute(
-                        f"INSERT INTO database1.telegram_parser_comment(town_from, town_to, posted, date, country_from, country_to, customer, customer_link, recipient, recipient_link, short) VALUES('{from_town}', '{to_town}', '{date_some}', '{date}', '{from_country}', '{to_country}', '{customer}', '{customer_link}', '{client}', '{client_link}', '{content_ad}')")
+                        "INSERT INTO database1.telegram_parser_comment"
+                        "(town_from, town_to, posted, date, country_from, "
+                        "country_to, customer, customer_link, recipient, "
+                        f"recipient_link, short) VALUES('{from_town}', "
+                        f"'{to_town}', '{date_some}', '{date}', "
+                        f"'{from_country}', '{to_country}', '{customer}', "
+                        f"'{customer_link}', '{client}', '{client_link}', "
+                        f"'{content_ad}')"
+                    )
                     CONNECTION.commit()
                 except Exception:
                     pass
@@ -122,17 +133,21 @@ class Parser:
         CURSOR.close()
 
     def additional_pages(self):
-        url = 'https://lardi-trans.com/reliability_zone/search_responses/?firmType=undefined&responseRate=negative&page=1'
+        url = ('https://lardi-trans.com/reliability_zone/search_responses/'
+               '?firmType=undefined&responseRate=negative&page=1')
 
+        # Do get request
         response = self.__session.get(url).content
         soup = BeautifulSoup(response, 'lxml')
 
+        # Get all cooments on page
         all_divs = soup.find('div', attrs={
             'class': 'rz-feedback_tab-container'
         }).find_all('div', attrs={
             'class': 'rz-feedback_item'
         })
 
+        # Create cursor
         CURSOR = CONNECTION.cursor(buffered=True)
 
         # Get needed content
@@ -191,17 +206,20 @@ class Parser:
             )
             current_short = CURSOR.fetchone()
 
+            # Check on exist
             if current_short is None:
                 CURSOR.execute(
-                    f"INSERT INTO database1.telegram_parser_comment(town_from, town_to, posted, date, country_from, country_to, customer, customer_link, recipient, recipient_link, short) VALUES('{from_town}', '{to_town}', '{date_some}', '{date}', '{from_country}', '{to_country}', '{customer}', '{customer_link}', '{client}', '{client_link}', '{content_ad}')")
+                    "INSERT INTO database1.telegram_parser_comment(town_from, "
+                    "town_to, posted, date, country_from, country_to, "
+                    "customer, customer_link, recipient, recipient_link, "
+                    f"short) VALUES('{from_town}', '{to_town}', "
+                    f"'{date_some}', '{date}', '{from_country}', "
+                    f"'{to_country}', '{customer}', '{customer_link}', "
+                    f"'{client}', '{client_link}', '{content_ad}')"
+                )
                 CONNECTION.commit()
                 print('Write...')
-
         CURSOR.close()
-
-        # print(date, from_country, to_country,
-        #       from_town, to_town, date_some, customer,
-        #       customer_link, client, client_link)
 
     def get_variants(self, string: str) -> dict:
         encoded_string = requests.utils.quote(string)
@@ -215,7 +233,8 @@ class Parser:
 
         try:
             response = response['items'][0]['owner']['id']
-            content_url = f'https://lardi-trans.com/reliability_zone/search_responses/?firmFromId={response}&'
+            content_url = ('https://lardi-trans.com/reliability_zone/'
+                           f'search_responses/?firmFromId={response}&')
             response_content = self.__session.get(content_url).content
             soup = BeautifulSoup(response_content, 'lxml')
             return soup, response
@@ -224,7 +243,8 @@ class Parser:
             print('Error. Message uncorrect')
 
     def get_paginated_links(self, soup: str, some_id: int) -> None:
-        content_url = f'https://lardi-trans.com/reliability_zone/search_responses/?firmFromId={some_id}&'
+        content_url = ('https://lardi-trans.com/reliability_zone/'
+                       f'search_responses/?firmFromId={some_id}&')
         try:
             pagination = int(soup.select(
                 '.pagination'
@@ -250,5 +270,5 @@ def format_date(date_string: str) -> str:
 
 
 parser = Parser()
-parser.parse_all()
-# parser.additional_pages()
+# parser.parse_all()
+parser.additional_pages()

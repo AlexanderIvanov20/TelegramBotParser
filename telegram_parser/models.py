@@ -12,7 +12,7 @@ class TelegramParserComment(models.Model):
     customer_link = models.CharField(max_length=500)
     recipient = models.CharField(max_length=500)
     recipient_link = models.CharField(max_length=500)
-    short = models.CharField(max_length=600)
+    short = models.CharField(max_length=1000)
 
     class Meta:
         verbose_name = 'Комментарий'
