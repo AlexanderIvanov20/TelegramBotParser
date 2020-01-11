@@ -4,7 +4,7 @@ import json
 
 from telebot.types import *
 from Parser import *
-from FinalKeyboard import main_keyboard, no_vip_keyboard, bottom_menu
+from FinalKeyboard import main_keyboard, no_vip_keyboard, pagination_keyboard
 from datetime import datetime, timedelta
 
 
@@ -29,14 +29,14 @@ DATA = {}
 
 
 # Texts to answer of bot
-def all_text():
+def all_text() -> dict:
     with open('Texts.json', 'r', encoding='utf-8') as file:
         data_text = json.load(file)
     return data_text
 
 
 # Check subcription till
-def check_date(chat_id):
+def check_date(chat_id: int) -> None:
     today_now = datetime.timestamp(datetime.now())
 
     CURSOR.execute('SELECT activation_till FROM database1.users_profile '
@@ -52,7 +52,7 @@ def check_date(chat_id):
 
 
 # Check on 1 request
-def check_today(chat_id):
+def check_today(chat_id: int) -> None:
     today_now = datetime.timestamp(datetime.now())
     try:
         till_date_today = DATA[f'{chat_id}_today_till']
@@ -64,12 +64,111 @@ def check_today(chat_id):
         pass
 
 
+# Template for string
+def template_final_string(current_comments: list, chat_id: int) -> str:
+    result_string = ''
+
+    start = DATA[f'{chat_id}_start']
+    end = DATA[f'{chat_id}_end']
+
+    for even_comment in current_comments[start:end]:
+        result_string += (f"🏙️ Города перевозки: {even_comment[1]} - "
+                          f"{even_comment[2]}\n"
+                          f"📅 Дата перевозки: {even_comment[3]}\n"
+                          f"⏰ Дата размещения отзыва: {even_comment[4]}\n"
+                          f"🏳️ Страны перевозки: {even_comment[5]} - "
+                          f"{even_comment[6]}\n\n"
+                          f"👨Заказчик: {even_comment[7]}\n"
+                          f"🔗 Заказчик(ссылка): {even_comment[8]}\n\n"
+                          f"👨 Перевозчик: {even_comment[9]}\n"
+                          f"🔗 Перевозчик(ссылка): {even_comment[10]}\n\n"
+                          f"📰 Текст отзыва: {even_comment[11]}\n\n\n")
+    return result_string
+
+
+# Template for output a result string
+def output_result_string(current_comments: list, current_user: tuple,
+                         message: Message) -> None:
+    # Check on existing
+    if current_comments == []:
+        keyboard = main_keyboard()
+        BOT.send_message(chat_id=message.chat.id,
+                         text='Компания не найдена. Попробуйте еще раз',
+                         reply_markup=keyboard)
+    else:
+        # If user have vip subcription
+        if current_user[1] == 1:
+            result_string = template_final_string(
+                current_comments=current_comments,
+                chat_id=message.chat.id
+            )
+            DATA[f'{message.chat.id}_comments'] = current_comments
+
+            # Register today's request
+            DATA[f'{message.chat.id}_count_requests'] += 1
+            if f'{message.chat.id}_today_till' not in DATA.keys():
+                DATA[f'{message.chat.id}_today_till'] = datetime.timestamp(
+                    datetime.now() + timedelta(days=1)
+                )
+
+            # Check in order to output pagination
+            if len(current_comments) > 3:
+                BOT.send_message(chat_id=message.chat.id,
+                                 text=result_string,
+                                 disable_web_page_preview=True,
+                                 reply_markup=pagination_keyboard(
+                                     left=False
+                                 ))
+            else:
+                BOT.send_message(chat_id=message.chat.id,
+                                 text=result_string,
+                                 disable_web_page_preview=True)
+        else:
+            if DATA[f'{message.chat.id}_count_requests'] <= 0:
+                result_string = template_final_string(
+                    current_comments=current_comments,
+                    chat_id=message.chat.id
+                )
+                DATA[f'{message.chat.id}_comments'] = current_comments
+
+                # Register today's request
+                DATA[f'{message.chat.id}_count_requests'] += 1
+                if f'{message.chat.id}_today_till' not in DATA.keys():
+                    DATA[
+                        f'{message.chat.id}_today_till'
+                    ] = datetime.timestamp(
+                        datetime.now() + timedelta(days=1)
+                    )
+
+                # Check in order to output pagination
+                if len(current_comments) > 3:
+                    BOT.send_message(chat_id=message.chat.id,
+                                     text=result_string,
+                                     disable_web_page_preview=True,
+                                     reply_markup=pagination_keyboard(
+                                         left=False
+                                     ))
+                else:
+                    BOT.send_message(chat_id=message.chat.id,
+                                     text=result_string,
+                                     disable_web_page_preview=True)
+            else:
+                # If user already did request today
+                BOT.send_message(chat_id=message.chat.id,
+                                 text='Запрос за сегодня уже сделан.\n\n'
+                                 'Купите подписку чтобы получать отзывы '
+                                 'бесконечно в течении месяца, либо '
+                                 'подождите до завтра.',
+                                 reply_markup=no_vip_keyboard())
+
+
 @BOT.message_handler(commands=['start'])
 def on_start(message: Message) -> None:
     parser = Parser()
     DATA[f'{message.chat.id}_parser'] = parser
     DATA[f'{message.chat.id}_count_requests'] = 0
 
+    # Check on
     check_date(chat_id=message.chat.id)
     check_today(chat_id=message.chat.id)
 
@@ -119,7 +218,7 @@ def query_get(query: InlineQuery) -> None:
             response = InlineQueryResultArticle(id=f"{even_owner['id']}",
                                                 title=f"{even_owner['nameWithoutBrand']}",
                                                 input_message_content=InputTextMessageContent(
-                                                    f"/{even_owner['nameWithoutBrand']}/"),
+                                                   f"/{even_owner['nameWithoutBrand']}/"),
                                                 description=f"{even_owner['timeOnSite']}. {even_owner['address']['country']}-{even_owner['address']['town']}")
             final_inline_query.append(response)
 
@@ -156,6 +255,7 @@ def got_payment(message: Message) -> None:
 def get_company(message: Message) -> None:
     check_date(chat_id=message.chat.id)
     check_today(chat_id=message.chat.id)
+
     if message.text[0] == '/' and message.text[-1] == '/':
         # Slice a text of message
         user_message = message.text[1:-1]
@@ -171,53 +271,11 @@ def get_company(message: Message) -> None:
         current_comments = CURSOR.fetchall()
         print(current_comments)
 
-        if current_comments == [] or current_comments is None:
-            keyboard = main_keyboard()
-            BOT.send_message(chat_id=message.chat.id,
-                             text='Компания не найдена. Попробуйте еще раз',
-                             reply_markup=keyboard)
-        else:
-            if current_user[1] == 1:
-                result_string = ''
-                for even_comment in current_comments:
-                    result_string += f"🏙️ Города перевозки: {even_comment[1]} - {even_comment[2]}\n📅 Дата перевозки: {even_comment[3]}\n⏰ Дата размещения отзыва: {even_comment[4]}\n🏳️ Страны перевозки: {even_comment[5]} - {even_comment[6]}\n👨Заказчик: {even_comment[7]}\n🔗 Заказчик(ссылка): {even_comment[8]}\n👨 Перевозчик: {even_comment[9]}\n🔗 Перевозчик(ссылка): {even_comment[10]}\n📰 Текст отзыва: {even_comment[11]}\n\n"
+        DATA[f'{message.from_user.id}_start'] = 0
+        DATA[f'{message.from_user.id}_end'] = 3
 
-                DATA[f'{message.chat.id}_count_requests'] += 1
-                if f'{message.chat.id}_today_till' not in DATA.keys():
-                    DATA[f'{message.chat.id}_today_till'] = datetime.timestamp(
-                        datetime.now() + timedelta(days=1)
-                    )
-                BOT.send_message(chat_id=message.chat.id, text=result_string,
-                                 disable_web_page_preview=True,
-                                 reply_markup=bottom_menu())
-            else:
-                if DATA[f'{message.chat.id}_count_requests'] <= 0:
-                    result_string = ''
-                    for even_comment in current_comments:
-                        result_string += f"🏙️ Города перевозки: {even_comment[1]} - {even_comment[2]}\n📅 Дата перевозки: {even_comment[3]}\n⏰ Дата размещения отзыва: {even_comment[4]}\n🏳️ Страны перевозки: {even_comment[5]} - {even_comment[6]}\n👨Заказчик: {even_comment[7]}\n🔗 Заказчик(ссылка): {even_comment[8]}\n👨 Перевозчик: {even_comment[9]}\n🔗 Перевозчик(ссылка): {even_comment[10]}\n📰 Текст отзыва: {even_comment[11]}\n\n"
-
-                    DATA[f'{message.chat.id}_count_requests'] += 1
-                    if f'{message.chat.id}_today_till' not in DATA.keys():
-                        DATA[
-                            f'{message.chat.id}_today_till'
-                        ] = datetime.timestamp(
-                            datetime.now() + timedelta(days=1)
-                        )
-                    BOT.send_message(chat_id=message.chat.id,
-                                     text=result_string,
-                                     disable_web_page_preview=True,
-                                     reply_markup=bottom_menu())
-                else:
-                    BOT.send_message(chat_id=message.chat.id,
-                                     text='Запрос за сегодня уже сделан.\n\n'
-                                     'Купите подписку чтобы получать отзывы '
-                                     'бесконечно в течении месяца, либо '
-                                     'подождите до завтра.',
-                                     reply_markup=no_vip_keyboard())
-    elif message.text == '📄 Вывести меню':
-        keyboard = main_keyboard()
-        BOT.send_message(chat_id=message.chat.id,
-                         text='Выбере нужный Вам пункт', reply_markup=keyboard)
+        output_result_string(current_comments=current_comments,
+                             current_user=current_user, message=message)
     else:
         BOT.send_message(chat_id=message.chat.id,
                          text='Я не могу обработать введеный Вами текст')
@@ -244,51 +302,13 @@ def get_url(message: Message) -> None:
     current_comments = CURSOR.fetchall()
     print(current_comments)
 
-    # Check on existing company
-    if current_comments == []:
-        keyboard = main_keyboard()
-        BOT.send_message(chat_id=message.chat.id,
-                         text='Компания не найдена или '
-                              'отзывов на нее в нашей базе нет. '
-                              'Попробуйте еще раз',
-                         reply_markup=keyboard)
-    else:
-        if current_user[1] == 1:
-            result_string = ''
-            for even_comment in current_comments:
-                result_string += f"🏙️ Города перевозки: {even_comment[1]} - {even_comment[2]}\n📅 Дата перевозки: {even_comment[3]}\n⏰ Дата размещения отзыва: {even_comment[4]}\n🏳️ Страны перевозки: {even_comment[5]} - {even_comment[6]}\n👨Заказчик: {even_comment[7]}\n🔗 Заказчик(ссылка): {even_comment[8]}\n👨 Перевозчик: {even_comment[9]}\n🔗 Перевозчик(ссылка): {even_comment[10]}\n📰 Текст отзыва: {even_comment[11]}\n\n"
+    DATA[f'{message.from_user.id}_start'] = 0
+    DATA[f'{message.from_user.id}_end'] = 3
 
-            DATA[f'{message.chat.id}_count_requests'] += 1
-            if f'{message.chat.id}_today_till' not in DATA.keys():
-                DATA[f'{message.chat.id}_today_till'] = datetime.timestamp(
-                    datetime.now() + timedelta(days=1)
-                )
-            BOT.send_message(chat_id=message.chat.id, text=result_string,
-                             disable_web_page_preview=True,
-                             reply_markup=bottom_menu())
-        else:
-            if DATA[f'{message.chat.id}_count_requests'] <= 0:
-                result_string = ''
-                for even_comment in current_comments:
-                    result_string += f"🏙️ Города перевозки: {even_comment[1]} - {even_comment[2]}\n📅 Дата перевозки: {even_comment[3]}\n⏰ Дата размещения отзыва: {even_comment[4]}\n🏳️ Страны перевозки: {even_comment[5]} - {even_comment[6]}\n👨Заказчик: {even_comment[7]}\n🔗 Заказчик(ссылка): {even_comment[8]}\n👨 Перевозчик: {even_comment[9]}\n🔗 Перевозчик(ссылка): {even_comment[10]}\n📰 Текст отзыва: {even_comment[11]}\n\n"
+    output_result_string(current_comments=current_comments,
+                         current_user=current_user, message=message)
 
-                DATA[f'{message.chat.id}_count_requests'] += 1
-                if f'{message.chat.id}_today_till' not in DATA.keys():
-                    DATA[f'{message.chat.id}_today_till'] = datetime.timestamp(
-                        datetime.now() + timedelta(days=1)
-                    )
-                BOT.send_message(chat_id=message.chat.id, text=result_string,
-                                 disable_web_page_preview=True,
-                                 reply_markup=bottom_menu())
-            else:
-                BOT.send_message(chat_id=message.chat.id,
-                                 text='Вы уже сделали запрос за сегодня.\n\n'
-                                      'Купите подписку чтобы получать отзывы '
-                                      'бесконечно в течении месяца, либо '
-                                      'подождите до завтра.',
-                                 reply_markup=no_vip_keyboard())
-
-
+# Get all callbacks
 @BOT.callback_query_handler(func=lambda call: True)
 def get_calls(call: CallbackQuery) -> None:
     check_date(chat_id=call.from_user.id)
@@ -304,14 +324,15 @@ def get_calls(call: CallbackQuery) -> None:
     elif call.data == 'no_vip':
         BOT.send_invoice(chat_id=call.from_user.id, title='Подписка на месяц',
                          description='Если Вы хотите делать больше, '
-                         'чем 1 запрос в день, '
-                         'купите подписку за 99 UAH',
+                                     'чем 1 запрос в день, '
+                                     'купите подписку за 99 UAH',
                          provider_token=PROVIDER_TOKEN, currency='uah',
                          is_flexible=False, prices=PRICES,
                          start_parameter='subscription-example',
                          invoice_payload='HAPPY FRIDAYS COUPON')
 
     elif call.data == 'vip':
+        # Get users vip options
         CURSOR.execute(
             'SELECT * FROM database1.users_profile '
             f'WHERE id_user={call.from_user.id};'
@@ -330,6 +351,72 @@ def get_calls(call: CallbackQuery) -> None:
         BOT.send_message(chat_id=call.from_user.id,
                          text=string, parse_mode='Markdown',
                          reply_markup=no_vip_keyboard())
+
+    # On right button
+    elif call.data == 'right':
+        # Get comments from dict
+        comments = DATA[f'{call.from_user.id}_comments']
+
+        # On end
+        if len(comments) - DATA[f'{call.from_user.id}_end'] <= 3:
+            DATA[f'{call.from_user.id}_start'] += 3
+            DATA[f'{call.from_user.id}_end'] += 3
+
+            keyboard = pagination_keyboard(right=False)
+        elif DATA[f'{call.from_user.id}_end'] + 3 < len(comments):
+            DATA[f'{call.from_user.id}_start'] += 3
+            DATA[f'{call.from_user.id}_end'] += 3
+
+            keyboard = pagination_keyboard()
+        elif DATA[f'{call.from_user.id}_end'] + 3 == len(comments):
+            DATA[f'{call.from_user.id}_start'] += 3
+            DATA[f'{call.from_user.id}_end'] += 3
+
+            keyboard = pagination_keyboard(right=False)
+        else:
+            start = DATA[f'{call.from_user.id}_start']
+            end = DATA[f'{call.from_user.id}_end']
+
+            keyboard = pagination_keyboard(right=False)
+
+        # Edit message and pagination menu
+        result_string = template_final_string(current_comments=comments,
+                                              chat_id=call.from_user.id)
+        BOT.edit_message_text(text=result_string, chat_id=call.from_user.id,
+                              message_id=call.message.message_id,
+                              disable_web_page_preview=True,
+                              reply_markup=keyboard)
+
+    # On left button
+    elif call.data == 'left':
+        # Get comments from dict
+        comments = DATA[f'{call.from_user.id}_comments']
+
+        # On start
+        if DATA[f'{call.from_user.id}_start'] - 3 <= 0:
+            DATA[f'{call.from_user.id}_start'] -= 3
+            DATA[f'{call.from_user.id}_end'] -= 3
+
+            keyboard = pagination_keyboard(left=False)
+        elif DATA[f'{call.from_user.id}_start'] - 3 > 0:
+            DATA[f'{call.from_user.id}_start'] -= 3
+            DATA[f'{call.from_user.id}_end'] -= 3
+
+            keyboard = pagination_keyboard()
+
+        # Edit message and pagination menu
+        result_string = template_final_string(current_comments=comments,
+                                              chat_id=call.from_user.id)
+        BOT.edit_message_text(text=result_string, chat_id=call.from_user.id,
+                              message_id=call.message.message_id,
+                              disable_web_page_preview=True,
+                              reply_markup=keyboard)
+
+    # Output menu
+    elif call.data == 'menu':
+        keyboard = main_keyboard()
+        BOT.send_message(chat_id=message.chat.id,
+                         text='Выбере нужный Вам пункт', reply_markup=keyboard)
 
 
 # Get all shipping query

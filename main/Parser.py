@@ -263,12 +263,14 @@ class Parser:
 # Formate timestamp to usuall date
 def format_date(date_string: str) -> str:
     formated_date = int(
-        date_string[date_string.find("(") + 1:date_string.find(",") - 3])
+        date_string[date_string.find("(") + 1:date_string.find(",") - 3]
+    )
     date = datetime.fromtimestamp(
-        formated_date).strftime(r'%d.%m.%Y')
+        formated_date
+    ).strftime(r'%d.%m.%Y')
     return date
 
 
-parser = Parser()
+# parser = Parser()
 # parser.parse_all()
-parser.additional_pages()
+# parser.additional_pages()
