@@ -15,9 +15,9 @@ class TelegramParserComment(models.Model):
     short = models.CharField(max_length=600)
 
     class Meta:
-        managed = False
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
+
         db_table = 'telegram_parser_comment'
 
     def __str__(self):
