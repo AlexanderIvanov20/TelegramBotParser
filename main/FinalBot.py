@@ -8,11 +8,14 @@ from FinalKeyboard import main_keyboard, no_vip_keyboard, pagination_keyboard
 from datetime import datetime, timedelta
 
 
+# Create connection with database
 CONNECTION = mysql_connector.connect(user='root', password='domestosroot50',
                                      host='localhost', database='database1',
                                      auth_plugin='mysql_native_password')
 CURSOR = CONNECTION.cursor(buffered=True)
-TOKEN = '917181533:AAHB0gNsOFCw4nHYpRyrDGDfQQySzFu7YMI'
+
+# Bot settings
+TOKEN = all_text()['token']
 BOT = telebot.TeleBot(token=TOKEN)
 PRICES = [
     LabeledPrice(label='Подписка на месяц', amount=100)
@@ -30,7 +33,7 @@ DATA = {}
 
 # Texts to answer of bot
 def all_text() -> dict:
-    with open('Texts.json', 'r', encoding='utf-8') as file:
+    with open('config.json', 'r', encoding='utf-8') as file:
         data_text = json.load(file)
     return data_text
 
@@ -43,7 +46,8 @@ def check_date(chat_id: int) -> None:
                    f'WHERE id_user={chat_id};')
     current_activation_till = CURSOR.fetchone()
 
-    if current_activation_till is not None and today_now > current_activation_till[0]:
+    if (current_activation_till is not None and
+            today_now > current_activation_till[0]):
         CURSOR.execute("UPDATE database1.users_profile SET "
                        f"vip=False, activation_date=0, "
                        f"activation_till=0 "
@@ -93,7 +97,8 @@ def output_result_string(current_comments: list, current_user: tuple,
     if current_comments == []:
         keyboard = main_keyboard()
         BOT.send_message(chat_id=message.chat.id,
-                         text='Компания не найдена. Попробуйте еще раз',
+                         text='Компания или отзывов на нее не найдены. '
+                              'Попробуйте еще раз',
                          reply_markup=keyboard)
     else:
         # If user have vip subcription
@@ -120,10 +125,12 @@ def output_result_string(current_comments: list, current_user: tuple,
                                      left=False
                                  ))
             else:
+                # Without pagination
                 BOT.send_message(chat_id=message.chat.id,
                                  text=result_string,
                                  disable_web_page_preview=True)
         else:
+            # If user don't do request yet
             if DATA[f'{message.chat.id}_count_requests'] <= 0:
                 result_string = template_final_string(
                     current_comments=current_comments,
@@ -149,6 +156,7 @@ def output_result_string(current_comments: list, current_user: tuple,
                                          left=False
                                      ))
                 else:
+                    # Without pagination
                     BOT.send_message(chat_id=message.chat.id,
                                      text=result_string,
                                      disable_web_page_preview=True)
@@ -164,6 +172,7 @@ def output_result_string(current_comments: list, current_user: tuple,
 
 @BOT.message_handler(commands=['start'])
 def on_start(message: Message) -> None:
+    # Parser class instance
     parser = Parser()
     DATA[f'{message.chat.id}_parser'] = parser
     DATA[f'{message.chat.id}_count_requests'] = 0
@@ -177,8 +186,8 @@ def on_start(message: Message) -> None:
                    f"WHERE id_user={message.chat.id};")
     current_user = CURSOR.fetchone()
 
+    # Create user if he/she doesn't exist
     if current_user is None:
-        # Create user if he/she doesn't exist
         CURSOR.execute("INSERT INTO database1.users_profile "
                        "(vip, activation_date, activation_till, id_user) "
                        f"VALUES (False, 0, 0, '{message.chat.id}')")
@@ -215,11 +224,16 @@ def query_get(query: InlineQuery) -> None:
         # Add point to drop-up menu
         for item in possible_variants:
             even_owner = item['owner']
-            response = InlineQueryResultArticle(id=f"{even_owner['id']}",
-                                                title=f"{even_owner['nameWithoutBrand']}",
-                                                input_message_content=InputTextMessageContent(
-                                                   f"/{even_owner['nameWithoutBrand']}/"),
-                                                description=f"{even_owner['timeOnSite']}. {even_owner['address']['country']}-{even_owner['address']['town']}")
+            response = InlineQueryResultArticle(
+                id=f"{even_owner['id']}",
+                title=f"{even_owner['nameWithoutBrand']}",
+                input_message_content=InputTextMessageContent(
+                    f"/{even_owner['nameWithoutBrand']}/"
+                ),
+                description=f"{even_owner['timeOnSite']}. "
+                            f"{even_owner['address']['country']}-"
+                            f"{even_owner['address']['town']}"
+            )
             final_inline_query.append(response)
 
         BOT.answer_inline_query(inline_query_id=query.id,
@@ -247,7 +261,8 @@ def got_payment(message: Message) -> None:
                      text=f'Поздравляем! Вы преобрели подписку за '
                           f'`{message.successful_payment.total_amount / 100} '
                           f'{message.successful_payment.currency}` \n\n'
-                          'Спасибо за покупку!', parse_mode='Markdown')
+                          'Спасибо за покупку!', parse_mode='Markdown',
+                          reply_markup=main_keyboard())
 
 
 # Get title of company and take all comments about it
@@ -340,14 +355,20 @@ def get_calls(call: CallbackQuery) -> None:
         current_user = CURSOR.fetchone()
 
         string = ''
-
         if current_user[1] == 0:
             string += '👑 VIP:  `Нет`\n'
         else:
             string += '👑 VIP:  `Есть`\n'
 
-        string += (f'День активации:  `{current_user[2]}`\n'
-                   f'Окончание подписки:  `{current_user[3]}`\n')
+        first_date = datetime.fromtimestamp(
+            current_user[2]
+        ).strftime(r'%d.%m.%Y %H:%M:%S')
+        second_date = datetime.fromtimestamp(
+            current_user[3]
+        ).strftime(r'%d.%m.%Y %H:%M:%S')
+
+        string += (f'День активации:  `{first_date}`\n'
+                   f'Окончание подписки:  `{second_date}`\n')
         BOT.send_message(chat_id=call.from_user.id,
                          text=string, parse_mode='Markdown',
                          reply_markup=no_vip_keyboard())
@@ -415,7 +436,7 @@ def get_calls(call: CallbackQuery) -> None:
     # Output menu
     elif call.data == 'menu':
         keyboard = main_keyboard()
-        BOT.send_message(chat_id=message.chat.id,
+        BOT.send_message(chat_id=call.from_user.id,
                          text='Выбере нужный Вам пункт', reply_markup=keyboard)
 
 
