@@ -111,23 +111,27 @@ class Parser:
                 content_ad = div.find('div', attrs={
                     'class': 'rz-feedback__short'
                 }).text.strip()
-                if content_ad == '':
-                    content_ad = '-'
 
-                try:
-                    CURSOR.execute(
-                        "INSERT INTO database1.telegram_parser_comment"
-                        "(town_from, town_to, posted, date, country_from, "
-                        "country_to, customer, customer_link, recipient, "
-                        f"recipient_link, short) VALUES('{from_town}', "
-                        f"'{to_town}', '{date_some}', '{date}', "
-                        f"'{from_country}', '{to_country}', '{customer}', "
-                        f"'{customer_link}', '{client}', '{client_link}', "
-                        f"'{content_ad}')"
-                    )
-                    CONNECTION.commit()
-                except Exception:
+                if content_ad == '' or content_ad == '' or \
+                        client.strip() == '' or from_town == '-' or \
+                        to_town == '-' or \
+                        client_link == 'https://lardi-trans.com/user/0/':
                     pass
+                else:
+                    try:
+                        CURSOR.execute(
+                            "INSERT INTO database1.telegram_parser_comment"
+                            "(town_from, town_to, posted, date, country_from, "
+                            "country_to, customer, customer_link, recipient, "
+                            f"recipient_link, short) VALUES('{from_town}', "
+                            f"'{to_town}', '{date_some}', '{date}', "
+                            f"'{from_country}', '{to_country}', '{customer}', "
+                            f"'{customer_link}', '{client}', '{client_link}', "
+                            f"'{content_ad}')"
+                        )
+                        CONNECTION.commit()
+                    except Exception:
+                        pass
             print(count)
             count += 1
         CURSOR.close()
@@ -221,43 +225,43 @@ class Parser:
                 print('Write...')
         CURSOR.close()
 
-    def get_variants(self, string: str) -> dict:
-        encoded_string = requests.utils.quote(string)
-        url = BASE_URL + f'?query={encoded_string}&excludeCurrent=false'
-        response = self.__session.get(url).json()
-        return response
+    # def get_variants(self, string: str) -> dict:
+    #     encoded_string = requests.utils.quote(string)
+    #     url = BASE_URL + f'?query={encoded_string}&excludeCurrent=false'
+    #     response = self.__session.get(url).json()
+    #     return response
 
-    def initial_request(self, string: str) -> tuple:
-        self.PAGINATED_LINKS = []
-        response = self.get_variants(string)
+    # def initial_request(self, string: str) -> tuple:
+    #     self.PAGINATED_LINKS = []
+    #     response = self.get_variants(string)
 
-        try:
-            response = response['items'][0]['owner']['id']
-            content_url = ('https://lardi-trans.com/reliability_zone/'
-                           f'search_responses/?firmFromId={response}&')
-            response_content = self.__session.get(content_url).content
-            soup = BeautifulSoup(response_content, 'lxml')
-            return soup, response
-        except IndexError:
-            self.company_exist = False
-            print('Error. Message uncorrect')
+    #     try:
+    #         response = response['items'][0]['owner']['id']
+    #         content_url = ('https://lardi-trans.com/reliability_zone/'
+    #                        f'search_responses/?firmFromId={response}&')
+    #         response_content = self.__session.get(content_url).content
+    #         soup = BeautifulSoup(response_content, 'lxml')
+    #         return soup, response
+    #     except IndexError:
+    #         self.company_exist = False
+    #         print('Error. Message uncorrect')
 
-    def get_paginated_links(self, soup: str, some_id: int) -> None:
-        content_url = ('https://lardi-trans.com/reliability_zone/'
-                       f'search_responses/?firmFromId={some_id}&')
-        try:
-            pagination = int(soup.select(
-                '.pagination'
-            )[0].find_all('li')[-2].find('a').text.strip())
-            print(pagination)
+    # def get_paginated_links(self, soup: str, some_id: int) -> None:
+    #     content_url = ('https://lardi-trans.com/reliability_zone/'
+    #                    f'search_responses/?firmFromId={some_id}&')
+    #     try:
+    #         pagination = int(soup.select(
+    #             '.pagination'
+    #         )[0].find_all('li')[-2].find('a').text.strip())
+    #         print(pagination)
 
-            self.PAGINATED_LINKS.append(content_url)
-            for item in range(2, pagination + 1):
-                self.PAGINATED_LINKS.append(content_url + f'page={item}')
-        except IndexError:
-            self.PAGINATED_LINKS = [content_url]
-            # self.reviews_condition = False
-            print('No paginated pages')
+    #         self.PAGINATED_LINKS.append(content_url)
+    #         for item in range(2, pagination + 1):
+    #             self.PAGINATED_LINKS.append(content_url + f'page={item}')
+    #     except IndexError:
+    #         self.PAGINATED_LINKS = [content_url]
+    #         # self.reviews_condition = False
+    #         print('No paginated pages')
 
 
 # Formate timestamp to usuall date

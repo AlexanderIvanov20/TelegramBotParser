@@ -8,6 +8,13 @@ from FinalKeyboard import main_keyboard, no_vip_keyboard, pagination_keyboard
 from datetime import datetime, timedelta
 
 
+# Texts to answer of bot
+def all_text() -> dict:
+    with open('config.json', 'r', encoding='utf-8') as file:
+        data_text = json.load(file)
+    return data_text
+
+
 # Create connection with database
 CONNECTION = mysql_connector.connect(user='root', password='domestosroot50',
                                      host='localhost', database='database1',
@@ -27,15 +34,24 @@ SHIPPING_OPTIONS = [
                                     amount=100)
     )
 ]
-PROVIDER_TOKEN = '632593626:TEST:i56982357197'
+# Liqpay token
+PROVIDER_TOKEN = all_text()['provider_token']
 DATA = {}
 
 
-# Texts to answer of bot
-def all_text() -> dict:
-    with open('config.json', 'r', encoding='utf-8') as file:
-        data_text = json.load(file)
-    return data_text
+# Get all titles of compaines that in database, set it and sort by alphabet
+def get_all_titles():
+    CURSOR.execute('SELECT recipient FROM database1.telegram_parser_comment;')
+    all_titles = CURSOR.fetchall()
+
+    # Write to set for unique
+    set_of_titles = set()
+    for item in all_titles:
+        set_of_titles.add(item[0])
+
+    # Sort
+    list_of_titles = list(sorted(list(set_of_titles)))
+    return list_of_titles
 
 
 # Check subcription till
@@ -81,12 +97,12 @@ def template_final_string(current_comments: list, chat_id: int) -> str:
                           f"📅 Дата перевозки: {even_comment[3]}\n"
                           f"⏰ Дата размещения отзыва: {even_comment[4]}\n"
                           f"🏳️ Страны перевозки: {even_comment[5]} - "
-                          f"{even_comment[6]}\n\n"
-                          f"👨Заказчик: {even_comment[7]}\n"
-                          f"🔗 Заказчик(ссылка): {even_comment[8]}\n\n"
-                          f"👨 Перевозчик: {even_comment[9]}\n"
-                          f"🔗 Перевозчик(ссылка): {even_comment[10]}\n\n"
-                          f"📰 Текст отзыва: {even_comment[11]}\n\n\n")
+                          f"{even_comment[6]}\n"
+                          f"👤Отзыв о {even_comment[9]} от "
+                          f"{even_comment[7]}\n"
+                          f"🔗 Заказчик(ссылка): {even_comment[8]}\n"
+                          f"🔗 Перевозчик(ссылка): {even_comment[10]}\n"
+                          f"📰 Текст отзыва: {even_comment[11]}\n\n")
     return result_string
 
 
@@ -127,7 +143,7 @@ def output_result_string(current_comments: list, current_user: tuple,
             else:
                 # Without pagination
                 BOT.send_message(chat_id=message.chat.id,
-                                 text=result_string,
+                                 text=result_string, parse_mode='Markdown',
                                  disable_web_page_preview=True)
         else:
             # If user don't do request yet
@@ -158,7 +174,7 @@ def output_result_string(current_comments: list, current_user: tuple,
                 else:
                     # Without pagination
                     BOT.send_message(chat_id=message.chat.id,
-                                     text=result_string,
+                                     text=result_string, parse_mode='Markdown',
                                      disable_web_page_preview=True)
             else:
                 # If user already did request today
@@ -170,8 +186,22 @@ def output_result_string(current_comments: list, current_user: tuple,
                                  reply_markup=no_vip_keyboard())
 
 
+# Add pages in commets
+def add_to_buttons(call: CallbackQuery):
+    DATA[f'{call.from_user.id}_start'] += 3
+    DATA[f'{call.from_user.id}_end'] += 3
+
+
+# Remove pages in comments
+def remove_from_buttons(call: CallbackQuery):
+    DATA[f'{call.from_user.id}_start'] -= 3
+    DATA[f'{call.from_user.id}_end'] -= 3
+
+
 @BOT.message_handler(commands=['start'])
 def on_start(message: Message) -> None:
+    get_all_titles()
+
     # Parser class instance
     parser = Parser()
     DATA[f'{message.chat.id}_parser'] = parser
@@ -215,26 +245,26 @@ def default_query(query: InlineQuery) -> None:
 def query_get(query: InlineQuery) -> None:
     try:
         user_message = query.query
-        possible_variants = DATA[
-            f'{query.from_user.id}_parser'
-        ].get_variants(user_message)['items']
-        print(possible_variants[0])
+        print(user_message)
+        # possible_variants = DATA[
+        #     f'{query.from_user.id}_parser'
+        # ].get_variants(user_message)['items']
+        # print(possible_variants[0])
+        possible_variants = get_all_titles()
         final_inline_query = []
 
+        point = 1
         # Add point to drop-up menu
         for item in possible_variants:
-            even_owner = item['owner']
-            response = InlineQueryResultArticle(
-                id=f"{even_owner['id']}",
-                title=f"{even_owner['nameWithoutBrand']}",
-                input_message_content=InputTextMessageContent(
-                    f"/{even_owner['nameWithoutBrand']}/"
-                ),
-                description=f"{even_owner['timeOnSite']}. "
-                            f"{even_owner['address']['country']}-"
-                            f"{even_owner['address']['town']}"
-            )
-            final_inline_query.append(response)
+            if user_message.lower() in item.lower() or \
+                    user_message.lower() == item.lower():
+                response = InlineQueryResultArticle(
+                    id=f"{point}",
+                    title=f"{item}",
+                    input_message_content=InputTextMessageContent(f"/{item}/")
+                )
+                final_inline_query.append(response)
+                point += 1
 
         BOT.answer_inline_query(inline_query_id=query.id,
                                 results=final_inline_query)
@@ -369,9 +399,14 @@ def get_calls(call: CallbackQuery) -> None:
 
         string += (f'День активации:  `{first_date}`\n'
                    f'Окончание подписки:  `{second_date}`\n')
-        BOT.send_message(chat_id=call.from_user.id,
-                         text=string, parse_mode='Markdown',
-                         reply_markup=no_vip_keyboard())
+
+        if current_user[1] == 0:
+            BOT.send_message(chat_id=call.from_user.id,
+                             text=string, parse_mode='Markdown',
+                             reply_markup=no_vip_keyboard())
+        else:
+            BOT.send_message(chat_id=call.from_user.id,
+                             text=string, parse_mode='Markdown')
 
     # On right button
     elif call.data == 'right':
@@ -380,20 +415,17 @@ def get_calls(call: CallbackQuery) -> None:
 
         # On end
         if len(comments) - DATA[f'{call.from_user.id}_end'] <= 3:
-            DATA[f'{call.from_user.id}_start'] += 3
-            DATA[f'{call.from_user.id}_end'] += 3
-
+            add_to_buttons(call=call)
             keyboard = pagination_keyboard(right=False)
+
         elif DATA[f'{call.from_user.id}_end'] + 3 < len(comments):
-            DATA[f'{call.from_user.id}_start'] += 3
-            DATA[f'{call.from_user.id}_end'] += 3
-
+            add_to_buttons(call=call)
             keyboard = pagination_keyboard()
-        elif DATA[f'{call.from_user.id}_end'] + 3 == len(comments):
-            DATA[f'{call.from_user.id}_start'] += 3
-            DATA[f'{call.from_user.id}_end'] += 3
 
+        elif DATA[f'{call.from_user.id}_end'] + 3 == len(comments):
+            add_to_buttons(call=call)
             keyboard = pagination_keyboard(right=False)
+
         else:
             start = DATA[f'{call.from_user.id}_start']
             end = DATA[f'{call.from_user.id}_end']
@@ -415,14 +447,11 @@ def get_calls(call: CallbackQuery) -> None:
 
         # On start
         if DATA[f'{call.from_user.id}_start'] - 3 <= 0:
-            DATA[f'{call.from_user.id}_start'] -= 3
-            DATA[f'{call.from_user.id}_end'] -= 3
-
+            remove_from_buttons(call=call)
             keyboard = pagination_keyboard(left=False)
-        elif DATA[f'{call.from_user.id}_start'] - 3 > 0:
-            DATA[f'{call.from_user.id}_start'] -= 3
-            DATA[f'{call.from_user.id}_end'] -= 3
 
+        elif DATA[f'{call.from_user.id}_start'] - 3 > 0:
+            remove_from_buttons(call=call)
             keyboard = pagination_keyboard()
 
         # Edit message and pagination menu
