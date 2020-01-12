@@ -1,9 +1,10 @@
 from django.urls import path
-from .views import Index, detailed, profiles
+from .views import Index, detailed, Profiles, Payment
 
 
 urlpatterns = [
     path('', Index.as_view(), name='index'),
     path('detailed/<comment_id>', detailed, name='detailed'),
-    path('profiles', profiles, name='profiles')
+    path('profiles', Profiles.as_view(), name='profiles'),
+    path('payment', Payment.as_view(), name='payment')
 ]

@@ -19,15 +19,20 @@
             <div class="col-sm-5 col-md-3">
                 <a href="{{ comment.customer_link }}">{{ comment.customer }}</a>
             </div>
-            <div class="col-sm-1 col-md-1">>></div>
+            <div class="col-sm-auto">>></div>
             <div class="col-sm-5 col-md-3">
                 <a href="{{ comment.recipient_link }}">{{ comment.recipient }}</a>
             </div>
-            <div class="col-sm-12 col-md-4">
-                {{ comment.short }}
+            <div class="col-sm-1 col-md-auto">
+                <form action="" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="method" value="delete">
+                    <input type="hidden" name="comment_id" value="{{ comment.id }}">
+                    <button class="btn btn-danger" type="submit"><i class="fas fa-trash-alt"></i></button>
+                </form>
             </div>
-            <div class="col-sm-1 col-md-1">
-                <button class="btn btn-danger">*</button>
+            <div class="col-sm-12">
+                {{ comment.short }}
             </div>
         </div>
     </div>
