@@ -14,8 +14,10 @@ __pycache__/
 
 # Debug DB
 db.sqlite3
+.db
 .sql
 .pgsql
+.sqlite3
 
 # Settings & configs & scripts
 local_settings.py
