@@ -201,28 +201,36 @@ class Parser:
             content_ad = div.find('div', attrs={
                 'class': 'rz-feedback__short'
             }).text.strip()
-            if content_ad == '':
-                content_ad = '-'
 
-            CURSOR.execute(
-                'SELECT * FROM database1.telegram_parser_comment '
-                f"WHERE short='{content_ad}';"
-            )
-            current_short = CURSOR.fetchone()
-
-            # Check on exist
-            if current_short is None:
+            if content_ad == '' or content_ad == '' or \
+                    client.strip() == '' or from_town == '-' or \
+                    to_town == '-' or \
+                    client_link == 'https://lardi-trans.com/user/0/':
+                pass
+            else:
                 CURSOR.execute(
-                    "INSERT INTO database1.telegram_parser_comment(town_from, "
-                    "town_to, posted, date, country_from, country_to, "
-                    "customer, customer_link, recipient, recipient_link, "
-                    f"short) VALUES('{from_town}', '{to_town}', "
-                    f"'{date_some}', '{date}', '{from_country}', "
-                    f"'{to_country}', '{customer}', '{customer_link}', "
-                    f"'{client}', '{client_link}', '{content_ad}')"
+                    'SELECT * FROM database1.telegram_parser_comment '
+                    f"WHERE short='{content_ad}';"
                 )
-                CONNECTION.commit()
-                print('Write...')
+                current_short = CURSOR.fetchone()
+
+                # Check on exist
+                if current_short is None:
+                    try:
+                        CURSOR.execute(
+                            "INSERT INTO database1.telegram_parser_comment( "
+                            "town_from, town_to, posted, date, country_from, "
+                            "country_to, customer, customer_link, recipient, "
+                            f"recipient_link, short) VALUES('{from_town}', "
+                            f"'{to_town}', '{date_some}', '{date}', "
+                            f"'{from_country}', '{to_country}', '{customer}', "
+                            f"'{customer_link}', '{client}', '{client_link}', "
+                            f"'{content_ad}')"
+                        )
+                        CONNECTION.commit()
+                        print('Write...')
+                    except Exception as error:
+                        print(error)
         CURSOR.close()
 
     # def get_variants(self, string: str) -> dict:
@@ -275,6 +283,6 @@ def format_date(date_string: str) -> str:
     return date
 
 
-# parser = Parser()
+parser = Parser()
 # parser.parse_all()
-# parser.additional_pages()
+parser.additional_pages()
