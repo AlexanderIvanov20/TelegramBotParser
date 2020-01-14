@@ -1,23 +1,27 @@
 from django.views import View
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404
 from .models import TelegramParserComment
 from users.models import Profile
-from .liq_sdk import LiqPay
 
 
 class Index(View):
     def get(self, request):
-        data = request.GET
+        data = dict(request.GET)
         comments = TelegramParserComment.objects.all()
-
+        pagelist = list(range(1, int(len(comments) / 30)))
+        # Pagination
         if 'page' in data:
-            interval = 30 * int(data['page'])
-            comments = TelegramParserComment.objects.all()[interval - 30:interval]
+            interval = 30 * int(data.get('page')[0])
+            comments = comments[interval - 30:interval]
+        else:
+            comments = comments[:30]
+            data['page'] = 1
+
         context = {
             'title': 'Комментарии',
-            'comments': comments
+            'comments': comments,
+            'pagelist': pagelist
         }
-        # pages = 
         return render(request, 'parser/mainpage.html', context)
 
     def post(self, request):
@@ -54,20 +58,7 @@ class Payment(View):
             profile = get_object_or_404(Profiles, id_user=data.get('id_user'))
         else:
             pass
-        liqpay = LiqPay(
-            'sandbox_i41551166851',
-            'sandbox_TQuWlo3gIC9Vz9fchAq9qrdPGJz3segJzpNpD1N7'
-        )
-        form = liqpay.cnb_form({
-            "action": "hold",
-            "amount": "99",
-            "currency": "UAH",
-            "description": f"Premium account(1 month) for user",
-            "order_id": "order_id_2",
-            "version": "3"
-        })
         context = {
-            'title': 'Оплата',
-            'form': form
+            'title': 'Оплата'
         }
         return render(request, 'paymentpage.html', context)
