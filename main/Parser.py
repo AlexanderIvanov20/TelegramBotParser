@@ -283,6 +283,6 @@ def format_date(date_string: str) -> str:
     return date
 
 
-parser = Parser()
+# parser = Parser()
 # parser.parse_all()
-parser.additional_pages()
+# parser.additional_pages()

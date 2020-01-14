@@ -25,13 +25,13 @@ CURSOR = CONNECTION.cursor(buffered=True)
 TOKEN = all_text()['token']
 BOT = telebot.TeleBot(token=TOKEN)
 PRICES = [
-    LabeledPrice(label='Подписка на месяц', amount=100)
+    LabeledPrice(label='Подписка на месяц', amount=300)
 ]
 SHIPPING_OPTIONS = [
     ShippingOption(id='instant',
                    title='Vip-подписка').add_price(
                        LabeledPrice(label='Vip-подписка',
-                                    amount=100)
+                                    amount=300)
     )
 ]
 # Liqpay token
@@ -282,11 +282,16 @@ def got_payment(message: Message) -> None:
     through_month = datetime.timestamp(datetime.now() + timedelta(days=30))
     print(message)
 
+    charged_id = (
+        message.successful_payment.provider_payment_charge_id
+    ).replace('_', '')
+    print(charged_id)
+
     # Write to table 'activations' for protocol
     CURSOR.execute('INSERT INTO database1.activations(id_user, purchase_date, '
                    'activation_till, provider_payment_charge_id) VALUES'
-                   f'({id_user}, {now_time}, {through_month}, '
-                   f'{message.successful_payment.provider_payment_charge_id})')
+                   f'({message.chat.id}, {now_time}, {through_month}, '
+                   f"'{charged_id}')")
     CONNECTION.commit()
 
     # Take to user vip-subscription
@@ -380,10 +385,10 @@ def get_calls(call: CallbackQuery) -> None:
                          description='Если Вы хотите делать больше, '
                                      'чем 1 запрос в день, '
                                      'купите подписку за 99 UAH',
-                         provider_token=PROVIDER_TOKEN, currency='uah',
+                         provider_token=PROVIDER_TOKEN, currency='UAH',
                          is_flexible=False, prices=PRICES,
                          start_parameter='subscription-example',
-                         invoice_payload='HAPPY FRIDAYS COUPON')
+                         invoice_payload='subcription coupon')
 
     elif call.data == 'vip':
         # Get users vip options
@@ -399,12 +404,16 @@ def get_calls(call: CallbackQuery) -> None:
         else:
             string += '👑 VIP:  `Есть`\n'
 
-        first_date = datetime.fromtimestamp(
-            current_user[2]
-        ).strftime(r'%d.%m.%Y %H:%M:%S')
-        second_date = datetime.fromtimestamp(
-            current_user[3]
-        ).strftime(r'%d.%m.%Y %H:%M:%S')
+        if current_user[2] != 0 and current_user[3] != 0:
+            first_date = datetime.fromtimestamp(
+                current_user[2]
+            ).strftime(r'%d.%m.%Y %H:%M:%S')
+            second_date = datetime.fromtimestamp(
+                current_user[3]
+            ).strftime(r'%d.%m.%Y %H:%M:%S')
+        else:
+            first_date = current_user[2]
+            second_date = current_user[3]
 
         string += (f'День активации:  `{first_date}`\n'
                    f'Окончание подписки:  `{second_date}`\n')

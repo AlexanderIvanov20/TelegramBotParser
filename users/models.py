@@ -7,7 +7,7 @@ class Activation(models.Model):
     id_user = models.IntegerField()
     purchase_date = models.FloatField()
     activation_till = models.FloatField()
-    provider_payment_charge_id = models.BigIntegerField()
+    provider_payment_charge_id = models.CharField(max_length=50)
 
     class Meta:
         verbose_name = 'Активация'
