@@ -6,40 +6,54 @@
 <div class="container bg-light border rounded mt-5 py-3">
     <div class="mb-3">
         <h2>Поиск</h2>
-        <form action="" method="POST" class="containter-fluid row">
-            <div class="col-md-6">
-                <input type="text" name="search" id="" class="form-control" placeholder="Search">
-            </div>
-            <div class="col-md-3">
-                <input type="text" name="country_from" id="" class="form-control" placeholder="Country From">
-            </div>
-            <div class="col-md-3">
-                <input type="text" name="contry_to" id="" class="form-control" placeholder="Country To">
-            </div>
-            <div class="col-md-6 pt-3">
+        <form action="" method="GET" class="containter-fluid row">
+            <div class="col-sm-12 col-md-6">
                 <div class="row">
-                    <div class="col-auto">
-                        <input type="radio" name="searchType" value="Инициалы"id="initials">
-                        <label for="initials" class="text-muted">Initials</label>
+                    <div class="col-12">
+                        <input type="text" name="search" id="" class="form-control" placeholder="Search">
                     </div>
-                    <div class="col-auto">
-                        <input type="radio" name="searchType" value="Город"id="town">
-                        <label for="town" class="text-muted">Comment</label>
-                    </div>
-                    <div class="col-auto">
-                        <input type="radio" name="searchType" value=""id="country">
-                        <label for="country" class="text-muted">Link</label>
+                    <div class="col-12 mt-3">
+                        <div class="row">
+                            <div class="col-3">
+                                <button type="submit" class="btn btn-secondary">Искать</button>
+                            </div>
+                            <div class="col-3 pt-2">
+                                <input type="radio" name="searchtype" value="short" id="short">
+                                <label for="short" class="text-muted">Comment</label>
+                            </div>
+                            <div class="col-3 py-2">
+                                <!-- <input type="radio" name="searchtype" value="initials" id="initials">
+                                <label for="initials" class="text-muted">Initials</label> -->
+                                <input type="checkbox" name="searchtype" value="customer" id="customer">
+                                <input type="checkbox" name="searchtype" value="recipient" id="recipient">
+                            </div>
+                            <div class="col-3 py-2">
+                                <input type="radio" name="searchtype" value="link" id="country">
+                                <label for="country" class="text-muted">Link</label>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3 pt-2">
-                <input type="text" name="town_from" id="" class="form-control" placeholder="Town from">
-            </div>
-            <div class="col-md-3 pt-2">
-                <input type="text" name="town_to" id="" class="form-control" placeholder="Town to">
+            <div class="col-sm-12 col-md-6">
+                <div class="row">
+                    <div class="col-6">
+                        <input type="text" name="country_from" id="" class="form-control" placeholder="Country From">
+                    </div>
+                    <div class="col-6">
+                        <input type="text" name="country_to" id="" class="form-control" placeholder="Country To">
+                    </div>
+                    <div class="col-6 pt-2">
+                        <input type="text" name="town_from" id="" class="form-control" placeholder="Town from">
+                    </div>
+                    <div class="col-6 pt-2">
+                        <input type="text" name="town_to" id="" class="form-control" placeholder="Town to">
+                    </div>
+                </div>
             </div>
         </form>
     </div>
+        
     {% for comment in comments %}
     <div class="containter-fluid bg-light border rounded my-3">
         <div class="containter-fluid bg-secondary rounded-top p-2"><a href="{% url 'detailed' comment_id=comment.id %}" class="text-reset">{{ comment.posted }} | {{ comment.country_from }} - {{ comment.country_to }} | {{ comment.town_from }} - {{ comment.town_to }}</a></div>
@@ -66,11 +80,9 @@
     </div>
     {% endfor %}
     <div class="container-fluid mt-3">
-        <form action="" method="GET">
-            {% for page in pagelist %}
-                <button name="page" value="{{ page }}">{{ page }}</button>
-            {% endfor %}
-        </form>   
+        {% for page in pagelist %}
+            <a href="{% url 'index' page=page %}" class="btn bg-light">{{ page }}</a>
+        {% endfor %}
     </div>
 </div>
 

@@ -1,7 +1,7 @@
 <div class="container-fluid bg-secondary">
     <div class="container py-2">
         <div class="row justify-content-between">
-            <a href="{% url 'index' %}" class="text-reset"><h1 class="col-auto">Parser</h1></a>
+            <a href="{% url 'index' page=1 %}" class="text-reset"><h1 class="col-auto">Parser</h1></a>
             <div class="col-auto">
             {% if user.is_authenticated %}
                 <div class="btn-group" role="group" aria-label="Basic example">
