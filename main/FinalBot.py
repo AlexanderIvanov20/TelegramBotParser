@@ -94,14 +94,15 @@ def template_final_string(current_comments: list, chat_id: int) -> str:
     for even_comment in current_comments[start:end]:
         result_string += (f"🏙️ Города перевозки: {even_comment[1]} - "
                           f"{even_comment[2]}\n"
-                          f"📅 Дата перевозки: {even_comment[3]}\n"
-                          f"⏰ Дата размещения отзыва: {even_comment[4]}\n"
+                          f"📅 Дата перевозки: <pre>{even_comment[3]}\n</pre>"
+                          f"⏰ Дата размещения отзыва: "
+                          f"<pre>{even_comment[4]}</pre>\n"
                           f"🏳️ Страны перевозки: {even_comment[5]} - "
                           f"{even_comment[6]}\n"
-                          f"👤Отзыв о {even_comment[9]} от "
-                          f"{even_comment[7]}\n"
-                          f"🔗 Заказчик(ссылка): {even_comment[8]}\n"
-                          f"🔗 Перевозчик(ссылка): {even_comment[10]}\n"
+                          f'👤Отзыв о <a href="{even_comment[10]}">'
+                          f'{even_comment[9]}</a> от '
+                          f'<a href="{even_comment[8]}">'
+                          f'{even_comment[7]}</a>\n'
                           f"📰 Текст отзыва: {even_comment[11]}\n\n")
     return result_string
 
@@ -139,7 +140,7 @@ def output_result_string(current_comments: list, current_user: tuple,
                                  disable_web_page_preview=True,
                                  reply_markup=pagination_keyboard(
                                      left=False
-                                 ))
+                                 ), parse_mode='HTML')
             else:
                 # Without pagination
                 BOT.send_message(chat_id=message.chat.id,
@@ -170,7 +171,7 @@ def output_result_string(current_comments: list, current_user: tuple,
                                      disable_web_page_preview=True,
                                      reply_markup=pagination_keyboard(
                                          left=False
-                                     ))
+                                     ), parse_mode='HTML')
                 else:
                     # Without pagination
                     BOT.send_message(chat_id=message.chat.id,
@@ -404,19 +405,26 @@ def get_calls(call: CallbackQuery) -> None:
         else:
             string += '👑 VIP:  `Есть`\n'
 
-        if current_user[2] != 0 and current_user[3] != 0:
+        if current_user[2] != 0 and current_user[3] != 0 and \
+                current_user[3] - current_user[2] != 0:
             first_date = datetime.fromtimestamp(
                 current_user[2]
             ).strftime(r'%d.%m.%Y %H:%M:%S')
             second_date = datetime.fromtimestamp(
                 current_user[3]
             ).strftime(r'%d.%m.%Y %H:%M:%S')
+            end_of_subscription = current_user[3] - current_user[2]
+            third_date = datetime.fromtimestamp(
+                end_of_subscription
+            ).strftime(r'%d.%m.%Y %H:%M:%S')
         else:
             first_date = current_user[2]
             second_date = current_user[3]
+            third_date = current_user[3] - current_user[2]
 
         string += (f'День активации:  `{first_date}`\n'
-                   f'Окончание подписки:  `{second_date}`\n')
+                   f'Окончание подписки:  `{second_date}`\n'
+                   f'Осталось до окончания: `{third_date}`\n')
 
         if current_user[1] == 0:
             BOT.send_message(chat_id=call.from_user.id,
@@ -510,6 +518,15 @@ def checkout(pre_checkout_query: PreCheckoutQuery) -> None:
                                                 "снова в течении нескольких "
                                                 "минут. Нам нужен небольшой "
                                                 "перерыв.")
+
+
+# Else block for all bot
+@BOT.message_handler(content_types=['location', 'photo', 'video', 'text'])
+def else_block(message: Message) -> None:
+    BOT.send_message(chat_id=message.chat.id,
+                     text='К сожалению, я Вас не понимаю... '
+                     'Попробуйте ввести корректные данные.',
+                     parse_mode='HTML')
 
 
 BOT.polling(none_stop=True)

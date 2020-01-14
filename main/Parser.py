@@ -13,6 +13,9 @@ HEADERS = {
                   '537.36 (KHTML, like Gecko) Chrome/79.0.3945.79 '
                   'Safari/537.36'
 }
+PROXY = {
+    'http': '92.242.126.154:44718'
+}
 CONNECTION = mysql_conn.connect(user='root', password='domestosroot50',
                                 host='localhost', database='database1',
                                 auth_plugin='mysql_native_password')
@@ -24,6 +27,7 @@ class Parser:
         # Create session and bind headers
         self.__session = requests.Session()
         self.__session.headers.update(HEADERS)
+        self.__session.proxies = PROXY
 
         # Add conditions
         self.reviews_condition = True
@@ -58,80 +62,16 @@ class Parser:
             even_response = self.__session.get(url).content
             even_soup = BeautifulSoup(even_response, 'lxml')
 
-            all_divs = even_soup.find('div', attrs={
-                'class': 'rz-feedback_tab-container'
-            }).find_all('div', attrs={
-                'class': 'rz-feedback_item'
-            })
+            try:
+                template_write_to_database(even_soup=even_soup)
+            except Exception as error:
+                self.__session.proxies = {
+                    'http': '94.76.92.10:4145'
+                }
+                even_response = self.__session.get(url).content
+                even_soup = BeautifulSoup(even_response, 'lxml')
 
-            # Get needed content
-            for div in all_divs:
-                date = div.find('span', attrs={
-                    'class': 'rz-feedback_service-date'
-                }).text.strip()
-                from_country = div.find('span', attrs={
-                    'class': 'rz-feedback_country-from'
-                }).text.strip()
-                to_country = div.find('span', attrs={
-                    'class': 'rz-feedback_country-to'
-                }).text.strip()
-                from_town = div.find('span', attrs={
-                    'class': 'rz-feedback_town-from'
-                }).text.strip()
-                to_town = div.find('span', attrs={
-                    'class': 'rz-feedback_town-to'
-                }).text.strip()
-                date_some = div.find('span', attrs={
-                    'class': 'rz-feedback_date'
-                }).text.strip()
-                date_some = format_date(date_some)
-
-                customer = div.find('div', attrs={
-                    'class': 'rz-feedback_service-performer'
-                }).find('div', attrs={
-                    'class': 'rz-feedback_service-person_name'
-                }).find('a').text.strip()
-                customer_link = ULTRA_BASE_URL + div.find('div', attrs={
-                    'class': 'rz-feedback_service-performer'
-                }).find('div', attrs={
-                    'class': 'rz-feedback_service-person_name'
-                }).find('a')['href']
-
-                client = div.find('div', attrs={
-                    'class': 'rz-feedback_service-client'
-                }).find('div', attrs={
-                    'class': 'rz-feedback_service-person_name'
-                }).find('a').text.strip()
-                client_link = ULTRA_BASE_URL + div.find('div', attrs={
-                    'class': 'rz-feedback_service-client'
-                }).find('div', attrs={
-                    'class': 'rz-feedback_service-person_name'
-                }).find('a')['href']
-
-                content_ad = div.find('div', attrs={
-                    'class': 'rz-feedback__short'
-                }).text.strip()
-
-                if content_ad == '' or content_ad == '' or \
-                        client.strip() == '' or from_town == '-' or \
-                        to_town == '-' or \
-                        client_link == 'https://lardi-trans.com/user/0/':
-                    pass
-                else:
-                    try:
-                        CURSOR.execute(
-                            "INSERT INTO database1.telegram_parser_comment"
-                            "(town_from, town_to, posted, date, country_from, "
-                            "country_to, customer, customer_link, recipient, "
-                            f"recipient_link, short) VALUES('{from_town}', "
-                            f"'{to_town}', '{date_some}', '{date}', "
-                            f"'{from_country}', '{to_country}', '{customer}', "
-                            f"'{customer_link}', '{client}', '{client_link}', "
-                            f"'{content_ad}')"
-                        )
-                        CONNECTION.commit()
-                    except Exception:
-                        pass
+                template_write_to_database(even_soup=even_soup)
             print(count)
             count += 1
         CURSOR.close()
@@ -145,92 +85,7 @@ class Parser:
         soup = BeautifulSoup(response, 'lxml')
 
         # Get all cooments on page
-        all_divs = soup.find('div', attrs={
-            'class': 'rz-feedback_tab-container'
-        }).find_all('div', attrs={
-            'class': 'rz-feedback_item'
-        })
-
-        # Create cursor
-        CURSOR = CONNECTION.cursor(buffered=True)
-
-        # Get needed content
-        for div in all_divs:
-            date = div.find('span', attrs={
-                'class': 'rz-feedback_service-date'
-            }).text.strip()
-            from_country = div.find('span', attrs={
-                'class': 'rz-feedback_country-from'
-            }).text.strip()
-            to_country = div.find('span', attrs={
-                'class': 'rz-feedback_country-to'
-            }).text.strip()
-            from_town = div.find('span', attrs={
-                'class': 'rz-feedback_town-from'
-            }).text.strip()
-            to_town = div.find('span', attrs={
-                'class': 'rz-feedback_town-to'
-            }).text.strip()
-            date_some = div.find('span', attrs={
-                'class': 'rz-feedback_date'
-            }).text.strip()
-            date_some = format_date(date_some)
-
-            customer = div.find('div', attrs={
-                'class': 'rz-feedback_service-performer'
-            }).find('div', attrs={
-                'class': 'rz-feedback_service-person_name'
-            }).find('a').text.strip()
-            customer_link = ULTRA_BASE_URL + div.find('div', attrs={
-                'class': 'rz-feedback_service-performer'
-            }).find('div', attrs={
-                'class': 'rz-feedback_service-person_name'
-            }).find('a')['href']
-
-            client = div.find('div', attrs={
-                'class': 'rz-feedback_service-client'
-            }).find('div', attrs={
-                'class': 'rz-feedback_service-person_name'
-            }).find('a').text.strip()
-            client_link = ULTRA_BASE_URL + div.find('div', attrs={
-                'class': 'rz-feedback_service-client'
-            }).find('div', attrs={
-                'class': 'rz-feedback_service-person_name'
-            }).find('a')['href']
-
-            content_ad = div.find('div', attrs={
-                'class': 'rz-feedback__short'
-            }).text.strip()
-
-            if content_ad == '' or content_ad == '' or \
-                    client.strip() == '' or from_town == '-' or \
-                    to_town == '-' or \
-                    client_link == 'https://lardi-trans.com/user/0/':
-                pass
-            else:
-                CURSOR.execute(
-                    'SELECT * FROM database1.telegram_parser_comment '
-                    f"WHERE short='{content_ad}';"
-                )
-                current_short = CURSOR.fetchone()
-
-                # Check on exist
-                if current_short is None:
-                    try:
-                        CURSOR.execute(
-                            "INSERT INTO database1.telegram_parser_comment( "
-                            "town_from, town_to, posted, date, country_from, "
-                            "country_to, customer, customer_link, recipient, "
-                            f"recipient_link, short) VALUES('{from_town}', "
-                            f"'{to_town}', '{date_some}', '{date}', "
-                            f"'{from_country}', '{to_country}', '{customer}', "
-                            f"'{customer_link}', '{client}', '{client_link}', "
-                            f"'{content_ad}')"
-                        )
-                        CONNECTION.commit()
-                        print('Write...')
-                    except Exception as error:
-                        print(error)
+        template_write_to_database(even_soup=soup)
         CURSOR.close()
 
     # def get_variants(self, string: str) -> dict:
@@ -283,6 +138,83 @@ def format_date(date_string: str) -> str:
     return date
 
 
-# parser = Parser()
-# parser.parse_all()
+def template_write_to_database(even_soup):
+    all_divs = even_soup.find('div', attrs={
+        'class': 'rz-feedback_tab-container'
+    }).find_all('div', attrs={
+        'class': 'rz-feedback_item'
+    })
+
+    # Get needed content
+    for div in all_divs:
+        date = div.find('span', attrs={
+            'class': 'rz-feedback_service-date'
+        }).text.strip()
+        from_country = div.find('span', attrs={
+            'class': 'rz-feedback_country-from'
+        }).text.strip()
+        to_country = div.find('span', attrs={
+            'class': 'rz-feedback_country-to'
+        }).text.strip()
+        from_town = div.find('span', attrs={
+            'class': 'rz-feedback_town-from'
+        }).text.strip()
+        to_town = div.find('span', attrs={
+            'class': 'rz-feedback_town-to'
+        }).text.strip()
+        date_some = div.find('span', attrs={
+            'class': 'rz-feedback_date'
+        }).text.strip()
+        date_some = format_date(date_some)
+
+        customer = div.find('div', attrs={
+            'class': 'rz-feedback_service-performer'
+        }).find('div', attrs={
+            'class': 'rz-feedback_service-person_name'
+        }).find('a').text.strip()
+        customer_link = ULTRA_BASE_URL + div.find('div', attrs={
+            'class': 'rz-feedback_service-performer'
+        }).find('div', attrs={
+            'class': 'rz-feedback_service-person_name'
+        }).find('a')['href']
+
+        client = div.find('div', attrs={
+            'class': 'rz-feedback_service-client'
+        }).find('div', attrs={
+            'class': 'rz-feedback_service-person_name'
+        }).find('a').text.strip()
+        client_link = ULTRA_BASE_URL + div.find('div', attrs={
+            'class': 'rz-feedback_service-client'
+        }).find('div', attrs={
+            'class': 'rz-feedback_service-person_name'
+        }).find('a')['href']
+
+        content_ad = div.find('div', attrs={
+            'class': 'rz-feedback__short'
+        }).text.strip()
+
+        if content_ad == '' or content_ad == '' or \
+                client.strip() == '' or from_town == '-' or \
+                to_town == '-' or \
+                client_link == 'https://lardi-trans.com/user/0/':
+            pass
+        else:
+            try:
+                CURSOR.execute(
+                    "INSERT INTO database1.telegram_parser_comment"
+                    "(town_from, town_to, posted, date, country_from, "
+                    "country_to, customer, customer_link, recipient, "
+                    f"recipient_link, short) VALUES('{from_town}', "
+                    f"'{to_town}', '{date_some}', '{date}', "
+                    f"'{from_country}', '{to_country}', '{customer}', "
+                    f"'{customer_link}', '{client}', '{client_link}', "
+                    f"'{content_ad}')"
+                )
+                CONNECTION.commit()
+            except Exception:
+                pass
+
+
+parser = Parser()
+parser.parse_all()
 # parser.additional_pages()
