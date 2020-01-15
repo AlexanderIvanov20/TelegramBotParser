@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from .models import TelegramParserComment
 from users.models import Profile
 from django.contrib import messages
-
+from django.db.models import Q
 
 class Index(View):
     def get(self, request, page=1):
@@ -22,9 +22,17 @@ class Index(View):
                 searchtype = filter_data.pop('searchtype')
                 if searchtype == 'short':
                     comments = comments.filter(short__contains=search)
+                elif searchtype == 'initials':
+                    comments = comments.filter(
+                        Q(customer__contains=search) | Q(recipient__contains=search)
+                    )
+                elif searchtype == 'links':
+                    comments = comments.filter(
+                        Q(customer_link__contains=search) | Q(recipient_link__contains=search)
+                    )
                 else:
-                    # comments
-                    pass
+                    comments = []
+                    messages.error(request, 'Блэт')
             except KeyError as keyerr:
                 print(keyerr)
                 messages.info(request, 'Тип поиска не указан')
