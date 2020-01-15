@@ -1,9 +1,10 @@
 from django.views import View
-from django.shortcuts import render, redirect, get_object_or_404
-from .models import TelegramParserComment
 from users.models import Profile
 from django.contrib import messages
+from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Q
+
+from .models import TelegramParserComment
 
 
 class Index(View):
@@ -38,7 +39,7 @@ class Index(View):
                     messages.error(request, 'Блэт')
             except KeyError as keyerr:
                 # TODO
-                # Potential bug
+                # Potential misunderstanding
                 messages.info(request, 'Тип поиска не указан')
 
         elif 'search' not in filter_data and 'searchtype' in filter_data:
@@ -79,25 +80,15 @@ def detailed(request, comment_id):
     }
     return render(request, 'parser/detailed.html', context)
 
-
-class Profiles(View):
-    def get(self, request):
-        profiles = Profile.objects.all()
-        context = {
-            'title': 'Профили',
-            'profiles': profiles
-        }
-        return render(request, 'parser/profiles.html', context)
-
-
-class Payment(View):
-    def get(self, request):
-        data = request.GET
-        if 'id_user' in data:
-            profile = get_object_or_404(Profiles, id_user=data.get('id_user'))
-        else:
-            pass
-        context = {
-            'title': 'Оплата'
-        }
-        return render(request, 'paymentpage.html', context)
+# !Temporarily deprecated
+# class Payment(View):
+#     def get(self, request):
+#         data = request.GET
+#         if 'id_user' in data:
+#             profile = get_object_or_404(Profiles, id_user=data.get('id_user'))
+#         else:
+#             pass
+#         context = {
+#             'title': 'Оплата'
+#         }
+#         return render(request, 'paymentpage.html', context)

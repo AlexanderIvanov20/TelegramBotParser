@@ -13,6 +13,7 @@
                 <div class="col-auto">Подписка: {{ profile.subscription }}</div>
                 <div class="col-auto">Дата активации: {{ profile.activation_date|to_datetime }}</div>
                 <div class="col-auto">Дата окончания: {{ profile.activation_till|to_datetime }}</div>
+                <a href="{% url 'profile_detailed' id_user=profile.id_user %}" class="btn btn-warning"></a>
             </div>
         {% endfor %}    
     </div>

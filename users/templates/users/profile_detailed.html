@@ -1,0 +1,15 @@
+{% extends 'wrapper.html' %}
+{% load crispy_forms_tags %}
+
+{% block main %}
+    {% include 'header.html' %}
+    <div class="container bg-light border rounded mt-5 py-3">
+        <h2>{{ title }}</h2>
+        <form action="" method="POST">
+            {% csrf_token %}
+            {{ form|crispy }}
+            <button type="submit" class="btn btn-secondary">Сохранить</button>
+        </form>
+    </div>
+{% endblock main %}
+    
