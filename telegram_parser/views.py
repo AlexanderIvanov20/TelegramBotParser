@@ -8,35 +8,28 @@ from django.contrib import messages
 class Index(View):
     def get(self, request, page=1):
         data = request.GET
+        print(data)
         page = int(page)
         filter_data = {key: item for key, item in data.items() if item != ''}
+        # Filter dictionary copy to fill form
         fill_data = filter_data.copy()
         comments = TelegramParserComment.objects.all()
 
-        if 'search' in data and len(data.get('search')) > 0:
+        if 'search' in filter_data and len(filter_data.get('search')) > 0:
             search = filter_data.pop('search')
             page = 1
             try:
                 searchtype = filter_data.pop('searchtype')
                 if searchtype == 'short':
-                    comments = comments.filter(
-                        short__contains=data.get('search')
-                    )
-                # elif False:
-                #     # !TODO
-                #     pass
-                # elif False:
-                #     # !TODO
-                #     pass
-                # ! Yet unfunctional
-                # filter_data = {key + '__contains': item for key, item in filter_data.items()}
-                # comments = comments.filter(
-                #     **{searchtype: search}
-                # )
+                    comments = comments.filter(short__contains=search)
+                else:
+                    # comments
+                    pass
             except KeyError as keyerr:
                 print(keyerr)
                 messages.info(request, 'Тип поиска не указан')
-        elif 'search' not in data and 'searchtype' in data:
+        elif 'search' not in filter_data and 'searchtype' in filter_data:
+            filter_data.pop('searchtype')
             messages.info(request, 'Пустая строка поиска')
 
         if len(filter_data) > 0:
