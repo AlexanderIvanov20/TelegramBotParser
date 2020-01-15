@@ -5,6 +5,7 @@ from users.models import Profile
 from django.contrib import messages
 from django.db.models import Q
 
+
 class Index(View):
     def get(self, request, page=1):
         data = request.GET
@@ -24,18 +25,22 @@ class Index(View):
                     comments = comments.filter(short__contains=search)
                 elif searchtype == 'initials':
                     comments = comments.filter(
-                        Q(customer__contains=search) | Q(recipient__contains=search)
+                        Q(customer__contains=search) | Q(
+                            recipient__contains=search)
                     )
                 elif searchtype == 'links':
                     comments = comments.filter(
-                        Q(customer_link__contains=search) | Q(recipient_link__contains=search)
+                        Q(customer_link__contains=search) | Q(
+                            recipient_link__contains=search)
                     )
                 else:
                     comments = []
                     messages.error(request, 'Блэт')
             except KeyError as keyerr:
-                print(keyerr)
+                # TODO
+                # Potential bug
                 messages.info(request, 'Тип поиска не указан')
+
         elif 'search' not in filter_data and 'searchtype' in filter_data:
             filter_data.pop('searchtype')
             messages.info(request, 'Пустая строка поиска')
@@ -65,35 +70,6 @@ class Index(View):
         }
         return render(request, 'parser/mainpage.html', context)
 
-# ! Deprecated, left for info purposes
-    # def deprecated(self, request):
-    #     data = dict(request.GET)
-    #     print(data)
-    #     data = {key: item[0] for key, item in data.items() if item != ['']}
-    #     print(data)
-    #     comments = TelegramParserComment.objects.filter(**data)
-    #     pagelist = list(range(1, int(len(comments) / 30)))
-
-    #     # Pagination
-    #     if 'page' in data:
-    #         interval = 30 * int(data.get('page')[0])
-
-    #         try:
-    #             comments = comments[interval - 30:interval]
-    #         except Exception as e:
-    #             comments = comments[:30]
-    #             data['page'] = 1
-    #     else:
-    #         comments = comments[:30]
-    #         data['page'] = 1
-
-    #     context = {
-    #         'title': 'Комментарии',
-    #         'comments': comments,
-    #         'pagelist': pagelist
-    #     }
-    #     return render(request, 'parser/mainpage.html', context)
-    
 
 def detailed(request, comment_id):
     comment = TelegramParserComment.objects.get(id=int(comment_id))
