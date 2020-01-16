@@ -46,16 +46,20 @@ class Index(View):
             filter_data.pop('searchtype')
             messages.info(request, 'Пустая строка поиска')
 
+        if 'sort_by' in filter_data:
+            comments = comments.order_by(filter_data.pop('sort_by'))
+
         if len(filter_data) > 0:
             comments = comments.filter(**filter_data)
-        pagelist = list(range(1, int(len(comments) / 30)))
 
         # Applying page interval
         if len(comments) > 30:
             comments = comments[30 * page-30:30 * page]
-
-        if len(comments) == 0:
+        elif len(comments) == 0:
             messages.warning(request, 'Отзывов не найдено')
+
+        pagelist = list(range(1, int(len(comments) / 30)))
+
         context = {
             'title': 'Комментарии',
             'comments': comments,
