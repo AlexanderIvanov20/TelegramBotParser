@@ -416,7 +416,7 @@ def get_calls(call: CallbackQuery) -> None:
             end_of_subscription = current_user[3] - current_user[2]
             third_date = datetime.fromtimestamp(
                 end_of_subscription
-            ).strftime(r'%d.%m.%Y %H:%M:%S')
+            ).strftime(r'%d дней')
         else:
             first_date = current_user[2]
             second_date = current_user[3]
