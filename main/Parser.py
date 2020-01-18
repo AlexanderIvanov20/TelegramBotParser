@@ -71,7 +71,7 @@ class Parser:
                 even_response = self.__session.get(url).content
                 even_soup = BeautifulSoup(even_response, 'lxml')
 
-                template_write_to_database(even_soup=even_soup)
+                template_write_to_database(even_soup=even_soup, CURSOR=CURSOR)
             print(count)
             count += 1
         CURSOR.close()
@@ -84,8 +84,10 @@ class Parser:
         response = self.__session.get(url).content
         soup = BeautifulSoup(response, 'lxml')
 
+        CURSOR = CONNECTION.cursor()
+
         # Get all cooments on page
-        template_write_to_database(even_soup=soup)
+        template_write_to_database(even_soup=soup, CURSOR=CURSOR)
         CURSOR.close()
 
     # def get_variants(self, string: str) -> dict:
@@ -138,7 +140,7 @@ def format_date(date_string: str) -> str:
     return date
 
 
-def template_write_to_database(even_soup):
+def template_write_to_database(even_soup, CURSOR):
     all_divs = even_soup.find('div', attrs={
         'class': 'rz-feedback_tab-container'
     }).find_all('div', attrs={
@@ -171,7 +173,7 @@ def template_write_to_database(even_soup):
             'class': 'rz-feedback_service-performer'
         }).find('div', attrs={
             'class': 'rz-feedback_service-person_name'
-        }).find('a').text.strip()
+        }).find('a').text.strip().replace("'", '')
         customer_link = ULTRA_BASE_URL + div.find('div', attrs={
             'class': 'rz-feedback_service-performer'
         }).find('div', attrs={
@@ -182,7 +184,7 @@ def template_write_to_database(even_soup):
             'class': 'rz-feedback_service-client'
         }).find('div', attrs={
             'class': 'rz-feedback_service-person_name'
-        }).find('a').text.strip()
+        }).find('a').text.strip().replace("'", '')
         client_link = ULTRA_BASE_URL + div.find('div', attrs={
             'class': 'rz-feedback_service-client'
         }).find('div', attrs={
@@ -191,7 +193,7 @@ def template_write_to_database(even_soup):
 
         content_ad = div.find('div', attrs={
             'class': 'rz-feedback__short'
-        }).text.strip()
+        }).text.strip().replace("'", '')
 
         if content_ad == '' or content_ad == '' or \
                 client.strip() == '' or from_town == '-' or \
@@ -211,10 +213,10 @@ def template_write_to_database(even_soup):
                     f"'{content_ad}')"
                 )
                 CONNECTION.commit()
-            except Exception:
-                pass
+            except Exception as error:
+                print(error)
 
 
-parser = Parser()
-parser.parse_all()
+# parser = Parser()
+# parser.parse_all()
 # parser.additional_pages()

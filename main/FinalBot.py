@@ -24,16 +24,16 @@ CURSOR = CONNECTION.cursor(buffered=True)
 # Bot settings
 TOKEN = all_text()['token']
 BOT = telebot.TeleBot(token=TOKEN)
-PRICES = [
-    LabeledPrice(label='Подписка на месяц', amount=300)
-]
-SHIPPING_OPTIONS = [
-    ShippingOption(id='instant',
-                   title='Vip-подписка').add_price(
-                       LabeledPrice(label='Vip-подписка',
-                                    amount=300)
-    )
-]
+# PRICES = [
+#     LabeledPrice(label='Подписка на месяц', amount=300)
+# ]
+# SHIPPING_OPTIONS = [
+#     ShippingOption(id='instant',
+#                    title='Vip-подписка').add_price(
+#                        LabeledPrice(label='Vip-подписка',
+#                                     amount=300)
+#     )
+# ]
 # Liqpay token
 PROVIDER_TOKEN = all_text()['provider_token']
 DATA = {}
@@ -66,8 +66,8 @@ def check_date(chat_id: int) -> None:
             today_now > current_activation_till[0]):
         CURSOR.execute("UPDATE database1.profiles SET "
                        f"vip=False, activation_date=0, "
-                       f"activation_till=0, subscription=False "
-                       f"WHERE id_user={chat_id};")
+                       f"activation_till=0, subscription=False, "
+                       f"need_vip=False WHERE id_user={chat_id};")
         CONNECTION.commit()
 
 
@@ -221,8 +221,8 @@ def on_start(message: Message) -> None:
     if current_user is None:
         CURSOR.execute("INSERT INTO database1.profiles"
                        "(vip, activation_date, activation_till, id_user, "
-                       "subscription) VALUES(False, 0, 0, "
-                       f"'{message.chat.id}', False)")
+                       "subscription, need_vip) VALUES(False, 0, 0, "
+                       f"'{message.chat.id}', False, False)")
         CONNECTION.commit()
 
     keyboard = main_keyboard()
@@ -275,39 +275,39 @@ def query_get(query: InlineQuery) -> None:
         print(error)
 
 
-# Successful payment
-@BOT.message_handler(content_types=['successful_payment'])
-def got_payment(message: Message) -> None:
-    # Get now-time, set now + 30 days
-    now_time = datetime.timestamp(datetime.now())
-    through_month = datetime.timestamp(datetime.now() + timedelta(days=30))
-    print(message)
+# ! Successful payment
+# @BOT.message_handler(content_types=['successful_payment'])
+# def got_payment(message: Message) -> None:
+#     # Get now-time, set now + 30 days
+#     now_time = datetime.timestamp(datetime.now())
+#     through_month = datetime.timestamp(datetime.now() + timedelta(days=30))
+#     print(message)
 
-    charged_id = (
-        message.successful_payment.provider_payment_charge_id
-    ).replace('_', '')
-    print(charged_id)
+#     charged_id = (
+#         message.successful_payment.provider_payment_charge_id
+#     ).replace('_', '')
+#     print(charged_id)
 
-    # Write to table 'activations' for protocol
-    CURSOR.execute('INSERT INTO database1.activations(id_user, purchase_date, '
-                   'activation_till, provider_payment_charge_id) VALUES'
-                   f'({message.chat.id}, {now_time}, {through_month}, '
-                   f"'{charged_id}')")
-    CONNECTION.commit()
+#     # Write to table 'activations' for protocol
+#     CURSOR.execute('INSERT INTO database1.activations(id_user, purchase_date, '
+#                    'activation_till, provider_payment_charge_id) VALUES'
+#                    f'({message.chat.id}, {now_time}, {through_month}, '
+#                    f"'{charged_id}')")
+#     CONNECTION.commit()
 
-    # Take to user vip-subscription
-    CURSOR.execute("UPDATE database1.profiles SET "
-                   f"vip=True, activation_date={now_time}, "
-                   f"activation_till={through_month}, subscription=False "
-                   f"WHERE id_user={message.chat.id};")
-    CONNECTION.commit()
+#     # Take to user vip-subscription
+#     CURSOR.execute("UPDATE database1.profiles SET "
+#                    f"vip=True, activation_date={now_time}, "
+#                    f"activation_till={through_month}, subscription=False "
+#                    f"WHERE id_user={message.chat.id};")
+#     CONNECTION.commit()
 
-    BOT.send_message(chat_id=message.chat.id,
-                     text=f'Поздравляем! Вы преобрели подписку за '
-                     f'`{message.successful_payment.total_amount / 100} '
-                     f'{message.successful_payment.currency}` \n\n'
-                          'Спасибо за покупку!', parse_mode='Markdown',
-                          reply_markup=main_keyboard())
+#     BOT.send_message(chat_id=message.chat.id,
+#                      text=f'Поздравляем! Вы преобрели подписку за '
+#                      f'`{message.successful_payment.total_amount / 100} '
+#                      f'{message.successful_payment.currency}` \n\n'
+#                           'Спасибо за покупку!', parse_mode='Markdown',
+#                           reply_markup=main_keyboard())
 
 
 # Get title of company and take all comments about it
@@ -380,16 +380,25 @@ def get_calls(call: CallbackQuery) -> None:
                                 text='Введите ссылку на компанию')
         BOT.register_next_step_handler(some, get_url)
 
-    # Send invoice
+    # ! Invoice sending
     elif call.data == 'no_vip':
-        BOT.send_invoice(chat_id=call.from_user.id, title='Подписка на месяц',
-                         description='Если Вы хотите делать больше, '
-                                     'чем 1 запрос в день, '
-                                     'купите подписку за 99 UAH',
-                         provider_token=PROVIDER_TOKEN, currency='UAH',
-                         is_flexible=False, prices=PRICES,
-                         start_parameter='subscription-example',
-                         invoice_payload='subcription coupon')
+        # BOT.send_invoice(chat_id=call.from_user.id, title='Подписка на месяц',
+        #                  description='Если Вы хотите делать больше, '
+        #                              'чем 1 запрос в день, '
+        #                              'купите подписку за 99 UAH',
+        #                  provider_token=PROVIDER_TOKEN, currency='UAH',
+        #                  is_flexible=False, prices=PRICES,
+        #                  start_parameter='subscription-example',
+        #                  invoice_payload='subcription coupon')
+
+        BOT.send_message(chat_id=call.from_user.id,
+                         text='Для приобретения подписки '
+                              'пройдите по ссылке '
+                              'https://send.monobank.ua/6Qv6mVbS6y '
+                              'и в комментарии перевода укажите Ваш '
+                              f'Telegram ID: `{call.from_user.id}` '
+                              '(обязательно)',
+                              parse_mode='Markdown')
 
     elif call.data == 'vip':
         # Get users vip options
@@ -398,6 +407,13 @@ def get_calls(call: CallbackQuery) -> None:
             f'WHERE id_user={call.from_user.id};'
         )
         current_user = CURSOR.fetchone()
+
+        # Create request for vip-subscription
+        CURSOR.execute("UPDATE database1.profiles SET "
+                       f"vip=False, activation_date=0, "
+                       f"activation_till=0, subscription=False "
+                       f"need_vip=True WHERE id_user={message.chat.id};")
+        CONNECTION.commit()
 
         string = ''
         if current_user[1] == 0:
@@ -464,7 +480,7 @@ def get_calls(call: CallbackQuery) -> None:
         BOT.edit_message_text(text=result_string, chat_id=call.from_user.id,
                               message_id=call.message.message_id,
                               disable_web_page_preview=True,
-                              reply_markup=keyboard)
+                              reply_markup=keyboard, parse_mode='HTML')
 
     # On left button
     elif call.data == 'left':
@@ -486,7 +502,7 @@ def get_calls(call: CallbackQuery) -> None:
         BOT.edit_message_text(text=result_string, chat_id=call.from_user.id,
                               message_id=call.message.message_id,
                               disable_web_page_preview=True,
-                              reply_markup=keyboard)
+                              reply_markup=keyboard, parse_mode='HTML')
 
     # Output menu
     elif call.data == 'menu':
@@ -495,29 +511,29 @@ def get_calls(call: CallbackQuery) -> None:
                          text='Выбере нужный Вам пункт', reply_markup=keyboard)
 
 
-# Get all shipping query
-@BOT.shipping_query_handler(func=lambda query: True)
-def shipping(shipping_query: ShippingQuery) -> None:
-    print(shipping_query)
-    BOT.answer_shipping_query(shipping_query_id=shipping_query.id, ok=True,
-                              shipping_options=SHIPPING_OPTIONS,
-                              error_message='Наша команда сейчас занята. '
-                                            'Попробуйте еще раз позже.')
+# ! Get all shipping query
+# @BOT.shipping_query_handler(func=lambda query: True)
+# def shipping(shipping_query: ShippingQuery) -> None:
+#     print(shipping_query)
+#     BOT.answer_shipping_query(shipping_query_id=shipping_query.id, ok=True,
+#                               shipping_options=SHIPPING_OPTIONS,
+#                               error_message='Наша команда сейчас занята. '
+#                                             'Попробуйте еще раз позже.')
 
 
-# Get all pre checkout query
-@BOT.pre_checkout_query_handler(func=lambda query: True)
-def checkout(pre_checkout_query: PreCheckoutQuery) -> None:
-    print(pre_checkout_query)
-    BOT.answer_pre_checkout_query(pre_checkout_query_id=pre_checkout_query.id,
-                                  ok=True,
-                                  error_message="Некто хочет украсть "
-                                                "CVV Вашей карты, но мы "
-                                                "успешно защитили Ваши "
-                                                "данные. Попробуйте оплатить "
-                                                "снова в течении нескольких "
-                                                "минут. Нам нужен небольшой "
-                                                "перерыв.")
+# ! Get all pre checkout query
+# @BOT.pre_checkout_query_handler(func=lambda query: True)
+# def checkout(pre_checkout_query: PreCheckoutQuery) -> None:
+#     print(pre_checkout_query)
+#     BOT.answer_pre_checkout_query(pre_checkout_query_id=pre_checkout_query.id,
+#                                   ok=True,
+#                                   error_message="Некто хочет украсть "
+#                                                 "CVV Вашей карты, но мы "
+#                                                 "успешно защитили Ваши "
+#                                                 "данные. Попробуйте оплатить "
+#                                                 "снова в течении нескольких "
+#                                                 "минут. Нам нужен небольшой "
+#                                                 "перерыв.")
 
 
 # Else block for all bot

@@ -25,6 +25,7 @@ class Profile(models.Model):
     subscription = models.BooleanField()
     activation_date = models.FloatField()
     activation_till = models.FloatField()
+    need_vip = models.BooleanField()
 
     class Meta:
         verbose_name = 'Профиль'
