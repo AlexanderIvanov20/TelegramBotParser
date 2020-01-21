@@ -24,6 +24,7 @@ CURSOR = CONNECTION.cursor(buffered=True)
 # Bot settings
 TOKEN = all_text()['token']
 BOT = telebot.TeleBot(token=TOKEN)
+# ! Prices options
 # PRICES = [
 #     LabeledPrice(label='Подписка на месяц', amount=300)
 # ]
@@ -94,9 +95,8 @@ def template_final_string(current_comments: list, chat_id: int) -> str:
     for even_comment in current_comments[start:end]:
         result_string += (f"🏙️ Города перевозки: {even_comment[1]} - "
                           f"{even_comment[2]}\n"
-                          f"📅 Дата перевозки: <pre>{even_comment[3]}\n</pre>"
-                          f"⏰ Дата размещения отзыва: "
-                          f"<pre>{even_comment[4]}</pre>\n"
+                          f"📅 Дата перевозки: {even_comment[3]}\n"
+                          f"⏰ Дата размещения отзыва: {even_comment[4]}\n"
                           f"🏳️ Страны перевозки: {even_comment[5]} - "
                           f"{even_comment[6]}\n"
                           f'👤Отзыв о <a href="{even_comment[10]}">'
@@ -204,8 +204,8 @@ def on_start(message: Message) -> None:
     get_all_titles()
 
     # Parser class instance
-    parser = Parser()
-    DATA[f'{message.chat.id}_parser'] = parser
+    # parser = Parser()
+    # DATA[f'{message.chat.id}_parser'] = parser
     DATA[f'{message.chat.id}_count_requests'] = 0
 
     # Check on
@@ -236,7 +236,8 @@ def default_query(query: InlineQuery) -> None:
     response = InlineQueryResultArticle(
         id='1', title='Название компании',
         input_message_content=InputTextMessageContent(
-            message_text='Название компании'),
+            message_text='Название компании'
+        ),
         description='Начните вводить название и выберете из предложеных '
                     'вариантов')
     BOT.answer_inline_query(inline_query_id=query.id, results=[response])
@@ -289,7 +290,7 @@ def query_get(query: InlineQuery) -> None:
 #     print(charged_id)
 
 #     # Write to table 'activations' for protocol
-#     CURSOR.execute('INSERT INTO database1.activations(id_user, purchase_date, '
+# CURSOR.execute('INSERT INTO database1.activations(id_user, purchase_date, '
 #                    'activation_till, provider_payment_charge_id) VALUES'
 #                    f'({message.chat.id}, {now_time}, {through_month}, '
 #                    f"'{charged_id}')")
@@ -382,7 +383,7 @@ def get_calls(call: CallbackQuery) -> None:
 
     # ! Invoice sending
     elif call.data == 'no_vip':
-        # BOT.send_invoice(chat_id=call.from_user.id, title='Подписка на месяц',
+        # BOT.send_invoice(chat_id=call.from_user.id, title='Подписка на месяц'
         #                  description='Если Вы хотите делать больше, '
         #                              'чем 1 запрос в день, '
         #                              'купите подписку за 99 UAH',
@@ -393,11 +394,12 @@ def get_calls(call: CallbackQuery) -> None:
 
         BOT.send_message(chat_id=call.from_user.id,
                          text='Для приобретения подписки '
-                              'пройдите по ссылке '
-                              'https://send.monobank.ua/6Qv6mVbS6y '
-                              'и в комментарии перевода укажите Ваш '
-                              f'Telegram ID: `{call.from_user.id}` '
-                              '(обязательно)',
+                              'пройдите по ссылке:\n'
+                              'https://send.monobank.ua/6Qv6mVbS6y\n\n'
+                              'В комментарии перевода укажите Ваш '
+                              f'Telegram ID: `{call.from_user.id}`\n'
+                              'Это обязательно, иначе мы не сможем '
+                              'Вас идентифицировать',
                               parse_mode='Markdown')
 
     elif call.data == 'vip':
@@ -411,8 +413,8 @@ def get_calls(call: CallbackQuery) -> None:
         # Create request for vip-subscription
         CURSOR.execute("UPDATE database1.profiles SET "
                        f"vip=False, activation_date=0, "
-                       f"activation_till=0, subscription=False "
-                       f"need_vip=True WHERE id_user={message.chat.id};")
+                       f"activation_till=0, subscription=False, "
+                       f"need_vip=True WHERE id_user={call.from_user.id};")
         CONNECTION.commit()
 
         string = ''
@@ -530,7 +532,7 @@ def get_calls(call: CallbackQuery) -> None:
 #                                   error_message="Некто хочет украсть "
 #                                                 "CVV Вашей карты, но мы "
 #                                                 "успешно защитили Ваши "
-#                                                 "данные. Попробуйте оплатить "
+#                                            "данные. Попробуйте оплатить "
 #                                                 "снова в течении нескольких "
 #                                                 "минут. Нам нужен небольшой "
 #                                                 "перерыв.")
