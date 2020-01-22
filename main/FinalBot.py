@@ -3,7 +3,7 @@ import mysql.connector as mysql_connector
 import json
 
 from telebot.types import *
-from Parser import *
+# from Parser import *
 from FinalKeyboard import main_keyboard, no_vip_keyboard, pagination_keyboard
 from datetime import datetime, timedelta
 
