@@ -55,13 +55,13 @@ class Login(View):
             else:
                 messages.warning(request, 'Ошибка')
                 return redirect('authenticate')
-        return redirect('index')
+        return redirect('index_1')
 
 
 def Logout(request):
     logout(request)
     messages.info(request, 'Вы вышли из аккаунта!')
-    return redirect('index')
+    return redirect('index_1')
 
 
 class Profiles(View):
