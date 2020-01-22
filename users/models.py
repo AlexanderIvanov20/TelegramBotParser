@@ -20,11 +20,11 @@ class Activation(models.Model):
 
 
 class Profile(models.Model):
-    id_user = models.IntegerField()
     vip = models.BooleanField()
-    subscription = models.BooleanField()
     activation_date = models.FloatField()
     activation_till = models.FloatField()
+    id_user = models.IntegerField()
+    subscription = models.BooleanField()
     need_vip = models.BooleanField()
 
     class Meta:
