@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+from django.contrib import messages
 from django.views import View
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
@@ -113,4 +115,34 @@ class DetailedProfile(View):
             else:
                 profile.activation_till = 0
             profile.save()
+        return redirect('profiles')
+
+
+class Activate(View):
+    def post(self, request):
+        data = request.POST
+        print(dict(data))
+        profile = get_object_or_404(Profile, id_user=data.get('id_user'))
+
+        if 'action' in data and 'amount' in data:
+            if data.get('action') == 'append':
+                if profile.activation_till > datetime.timestamp(datetime.now()):
+                    profile.activation_till += 2592000 * int(data.get('amount'))
+                else:
+                    profile.activation_date = datetime.timestamp(datetime.now())
+                    profile.activation_till = datetime.timestamp(datetime.now() + timedelta(int(data.get('amount'))))
+                profile.vip = True
+                profile.need_vip = False
+            elif data.get('action') == 'remove':
+                profile.activation_till == 0
+                profile.vip = False
+                profile.need_vip = False
+            else:
+                messages.error('Error has occured')
+                return redirect('profiles')
+            profile.save()
+        else:
+            messages.error('Error has occured')
+            return redirect('profiles')
+
         return redirect('profiles')

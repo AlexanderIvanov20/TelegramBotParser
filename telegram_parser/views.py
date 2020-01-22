@@ -23,23 +23,21 @@ class Index(View):
             try:
                 searchtype = filter_data.pop('searchtype')
                 if searchtype == 'short':
-                    comments = comments.filter(short__contains=search)
+                    comments = comments.filter(short__icontains=search)
                 elif searchtype == 'initials':
                     comments = comments.filter(
-                        Q(customer__contains=search) | Q(
-                            recipient__contains=search)
+                        Q(customer__icontains=search) | Q(
+                            recipient__icontains=search)
                     )
                 elif searchtype == 'links':
                     comments = comments.filter(
-                        Q(customer_link__contains=search) | Q(
-                            recipient_link__contains=search)
+                        Q(customer_link__icontains=search) | Q(
+                            recipient_link__icontains=search)
                     )
                 else:
                     comments = []
                     messages.error(request, 'Блэт')
             except KeyError as keyerr:
-                # TODO
-                # Potential misunderstanding
                 messages.info(request, 'Тип поиска не указан')
 
         elif 'search' not in filter_data and 'searchtype' in filter_data:
@@ -84,15 +82,3 @@ def detailed(request, comment_id):
     }
     return render(request, 'parser/detailed.html', context)
 
-# !Temporarily deprecated
-# class Payment(View):
-#     def get(self, request):
-#         data = request.GET
-#         if 'id_user' in data:
-#             profile = get_object_or_404(Profiles, id_user=data.get('id_user'))
-#         else:
-#             pass
-#         context = {
-#             'title': 'Оплата'
-#         }
-#         return render(request, 'paymentpage.html', context)
