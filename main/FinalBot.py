@@ -229,7 +229,7 @@ def on_start(message: Message) -> None:
                        "(vip, activation_date, activation_till, id_user, "
                        "subscription, need_vip, credentials) "
                        f"VALUES(False, 0, 0, '{message.chat.id}', False, "
-                       f"False, '{first_name}', '{last_name}')")
+                       f"False, '{first_name} {last_name}')")
         CONNECTION.commit()
 
     keyboard = main_keyboard()
