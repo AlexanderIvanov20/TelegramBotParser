@@ -111,7 +111,9 @@ class DetailedProfile(View):
         if form.is_valid():
             profile.vip = form.cleaned_data.get('vip')
             if form.cleaned_data.get('vip'):
-                profile.activation_till = form.cleaned_data.get('activation_till')
+                profile.activation_till = form.cleaned_data.get(
+                    'activation_till'
+                )
             else:
                 profile.activation_till = 0
             profile.save()
@@ -119,6 +121,9 @@ class DetailedProfile(View):
 
 
 class Activate(View):
+    def get(self, request):
+        return redirect('profiles')
+
     def post(self, request):
         data = request.POST
         print(dict(data))
@@ -127,10 +132,13 @@ class Activate(View):
         if 'action' in data and 'amount' in data:
             if data.get('action') == 'append':
                 if profile.activation_till > datetime.timestamp(datetime.now()):
-                    profile.activation_till += 2592000 * int(data.get('amount'))
+                    profile.activation_till += 2592000 * \
+                        int(data.get('amount'))
                 else:
-                    profile.activation_date = datetime.timestamp(datetime.now())
-                    profile.activation_till = datetime.timestamp(datetime.now() + timedelta(int(data.get('amount'))))
+                    profile.activation_date = datetime.timestamp(
+                        datetime.now())
+                    profile.activation_till = datetime.timestamp(
+                        datetime.now() + timedelta(int(data.get('amount'))))
                 profile.vip = True
                 profile.need_vip = False
             elif data.get('action') == 'remove':

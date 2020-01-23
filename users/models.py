@@ -26,6 +26,7 @@ class Profile(models.Model):
     activation_date = models.FloatField()
     activation_till = models.FloatField()
     need_vip = models.BooleanField()
+    credentials = models.CharField(max_length=70)
 
     class Meta:
         verbose_name = 'Профиль'
