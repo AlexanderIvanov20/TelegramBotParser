@@ -146,11 +146,15 @@ class Activate(View):
                 profile.vip = False
                 profile.need_vip = False
             else:
-                messages.error('Error has occured')
+                messages.error(request, 'Error has occured')
                 return redirect('profiles')
             profile.save()
         else:
-            messages.error('Error has occured')
+            messages.error(request, 'Error has occured')
             return redirect('profiles')
-
+        messages.success(request, 'Пользователю {}({}) начислено {} месяц(ев) vip'.format(
+            profile.credentials,
+            profile.id_user,
+            data.get('amount')
+        ))
         return redirect('profiles')
