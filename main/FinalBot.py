@@ -17,8 +17,9 @@ def all_text() -> dict:
 
 # Create connection with database
 CONNECTION = mysql_connector.connect(user='root', password='domestosroot50',
-                                     host='localhost', database='database1',
-                                     auth_plugin='mysql_native_password')
+                                     host='127.0.0.1', database='database1',
+                                     auth_plugin='mysql_native_password',
+                                     port=3306)
 CURSOR = CONNECTION.cursor(buffered=True)
 
 # Bot settings
@@ -65,8 +66,6 @@ def check_date(chat_id: int) -> None:
 
     if (current_activation_till is not None and
             today_now > current_activation_till[0]):
-        first_name = call.from_user.first_name
-        last_name = call.from_user.last_name
 
         CURSOR.execute("UPDATE database1.profiles SET "
                        f"vip=False, activation_date=0, "
