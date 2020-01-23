@@ -6,16 +6,48 @@
     {% include 'header.html' %}
     <div class="container bg-light border rounded mt-5 py-3">
         <h2>{{ title }}</h2>
+        <br>
+        <h4>Ожидают vip</h4>
+        {% for profile in profiles %} 
+            {% if profile.need_vip %}
+                <div class="containter-fluid bg-light border rounded my-3 p-3">
+                    <div class="col-auto">Имя: {{ profile.credentials }}</div>
+                    <div class="col-auto">ID: {{ profile.id_user }}</div>
+                    <div class="col-auto">Вип статус: {{ profile.vip }}</div>
+                    <div class="col-auto">Подписка: {{ profile.subscription }}</div>
+                    <div class="col-auto">Дата активации: {{ profile.activation_date|to_datetime }}</div>
+                    <div class="col-auto">Дата окончания: {{ profile.activation_till|to_datetime }}</div>
+                    <form action="{% url 'activate' %}" method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="id_user" value="{{ profile.id_user }}">
+                        <input type="number" name="amount" value="1">
+                        <button class="btn btn-warning" type="submit" name="action" value="append">Add</button>
+                        <button class="btn btn-warning" type="submit" name="action" value="remove">Remove</button>
+                    </form>
+                </div>
+            {% endif %}
+        {% endfor %}
+        <h4>Vip пользователи</h4>
         {% for profile in profiles %}
-            <div class="containter-fluid bg-light border rounded my-3">
-                <div class="col-auto">ID: {{ profile.id_user }}</div>
-                <div class="col-auto">Вип статус: {{ profile.vip }}</div>
-                <div class="col-auto">Подписка: {{ profile.subscription }}</div>
-                <div class="col-auto">Дата активации: {{ profile.activation_date|to_datetime }}</div>
-                <div class="col-auto">Дата окончания: {{ profile.activation_till|to_datetime }}</div>
-                <a href="{% url 'profile_detailed' id_user=profile.id_user %}" class="btn btn-warning"></a>
-            </div>
-        {% endfor %}    
+            {% if profile.vip %}
+                <div class="containter-fluid bg-light border rounded my-3 p-3">
+                    <div class="col-auto">Имя: {{ profile.credentials }}</div>
+                    <div class="col-auto">ID: {{ profile.id_user }}</div>
+                    <div class="col-auto">Вип статус: {{ profile.vip }}</div>
+                    <div class="col-auto">Подписка: {{ profile.subscription }}</div>
+                    <div class="col-auto">Дата активации: {{ profile.activation_date|to_datetime }}</div>
+                    <div class="col-auto">Дата окончания: {{ profile.activation_till|to_datetime }}</div>
+                    <form action="{% url 'activate' %}" method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="id_user" value="{{ profile.id_user }}">
+                        <input type="number" name="amount" value="1">
+                        <button class="btn btn-warning" type="submit" name="action" value="append">Add</button>
+                        <button class="btn btn-warning" type="submit" name="action" value="remove">Remove</button>
+                    </form>
+                </div>
+            {% endif %}
+        {% endfor %}
+            
     </div>
 
 {% endblock main %}

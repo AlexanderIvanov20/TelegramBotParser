@@ -14,9 +14,9 @@ HEADERS = {
                   'Safari/537.36'
 }
 PROXY = {
-    'http': '92.242.126.154:44718'
+    'http': '217.20.183.149:4145'
 }
-CONNECTION = mysql_conn.connect(user='root', password='domestosroot50',
+CONNECTION = mysql_conn.connect(user='root', password='myrootpassword',
                                 host='localhost', database='database1',
                                 auth_plugin='mysql_native_password')
 
@@ -160,10 +160,10 @@ def template_write_to_database(even_soup, CURSOR):
         }).text.strip()
         from_town = div.find('span', attrs={
             'class': 'rz-feedback_town-from'
-        }).text.strip()
+        }).text.strip().replace("'", '')
         to_town = div.find('span', attrs={
             'class': 'rz-feedback_town-to'
-        }).text.strip()
+        }).text.strip().replace("'", '')
         date_some = div.find('span', attrs={
             'class': 'rz-feedback_date'
         }).text.strip()
@@ -216,7 +216,7 @@ def template_write_to_database(even_soup, CURSOR):
             except Exception as error:
                 print(error)
 
-
-# parser = Parser()
-# parser.parse_all()
-# parser.additional_pages()
+if __name__ == '__main__':
+    parser = Parser()
+    parser.parse_all()
+    # parser.additional_pages()

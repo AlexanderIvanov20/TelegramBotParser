@@ -26,6 +26,7 @@ class Profile(models.Model):
     id_user = models.IntegerField()
     subscription = models.BooleanField()
     need_vip = models.BooleanField()
+    credentials = models.CharField(max_length=70)
 
     class Meta:
         verbose_name = 'Профиль'
