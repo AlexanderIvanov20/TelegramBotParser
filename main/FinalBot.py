@@ -3,7 +3,7 @@ import mysql.connector as mysql_connector
 import json
 
 from telebot.types import *
-from Parser import *
+# from Parser import *
 from FinalKeyboard import main_keyboard, no_vip_keyboard, pagination_keyboard
 from datetime import datetime, timedelta
 
@@ -17,9 +17,8 @@ def all_text() -> dict:
 
 # Create connection with database
 CONNECTION = mysql_connector.connect(user='root', password='domestosroot50',
-                                     host='127.0.0.1', database='database1',
-                                     auth_plugin='mysql_native_password',
-                                     port=3306)
+                                     host='localhost', database='database1',
+                                     auth_plugin='mysql_native_password')
 CURSOR = CONNECTION.cursor(buffered=True)
 
 # Bot settings
@@ -203,6 +202,7 @@ def remove_from_buttons(call: CallbackQuery):
 
 @BOT.message_handler(commands=['start'])
 def on_start(message: Message) -> None:
+    print('/start')
     get_all_titles()
 
     # Parser class instance
@@ -320,6 +320,7 @@ def query_get(query: InlineQuery) -> None:
 # Get title of company and take all comments about it
 @BOT.message_handler(content_types=['text'])
 def get_company(message: Message) -> None:
+    print('text')
     check_date(chat_id=message.chat.id)
     check_today(chat_id=message.chat.id)
 
@@ -378,6 +379,7 @@ def get_url(message: Message) -> None:
 # Get all callbacks
 @BOT.callback_query_handler(func=lambda call: True)
 def get_calls(call: CallbackQuery) -> None:
+    print('call')
     check_date(chat_id=call.from_user.id)
     check_today(chat_id=call.from_user.id)
 

@@ -16,7 +16,7 @@ HEADERS = {
 PROXY = {
     'http': '217.20.183.149:4145'
 }
-CONNECTION = mysql_conn.connect(user='root', password='myrootpassword',
+CONNECTION = mysql_conn.connect(user='root', password='domestosroot50',
                                 host='localhost', database='database1',
                                 auth_plugin='mysql_native_password')
 
@@ -215,6 +215,7 @@ def template_write_to_database(even_soup, CURSOR):
                 CONNECTION.commit()
             except Exception as error:
                 print(error)
+
 
 if __name__ == '__main__':
     parser = Parser()
