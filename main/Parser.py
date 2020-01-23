@@ -160,10 +160,10 @@ def template_write_to_database(even_soup, CURSOR):
         }).text.strip()
         from_town = div.find('span', attrs={
             'class': 'rz-feedback_town-from'
-        }).text.strip()
+        }).text.strip().replace("'", '')
         to_town = div.find('span', attrs={
             'class': 'rz-feedback_town-to'
-        }).text.strip()
+        }).text.strip().replace("'", '')
         date_some = div.find('span', attrs={
             'class': 'rz-feedback_date'
         }).text.strip()
