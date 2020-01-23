@@ -220,7 +220,7 @@ def on_start(message: Message) -> None:
     current_user = CURSOR.fetchone()
 
     first_name = message.from_user.first_name
-    last_name = message.from_user.first_name
+    last_name = message.from_user.last_name
 
     # Create user if he/she doesn't exist
     if current_user is None:
@@ -389,6 +389,13 @@ def get_calls(call: CallbackQuery) -> None:
 
     # ! Invoice sending
     elif call.data == 'no_vip':
+        # Create request for vip-subscription
+        CURSOR.execute("UPDATE database1.profiles SET "
+                       f"vip=False, activation_date=0, "
+                       f"activation_till=0, subscription=False, "
+                       f"need_vip=True WHERE id_user={call.from_user.id};")
+        CONNECTION.commit()
+
         # BOT.send_invoice(chat_id=call.from_user.id, title='Подписка на месяц'
         #                  description='Если Вы хотите делать больше, '
         #                              'чем 1 запрос в день, '
@@ -415,13 +422,6 @@ def get_calls(call: CallbackQuery) -> None:
             f'WHERE id_user={call.from_user.id};'
         )
         current_user = CURSOR.fetchone()
-
-        # Create request for vip-subscription
-        CURSOR.execute("UPDATE database1.profiles SET "
-                       f"vip=False, activation_date=0, "
-                       f"activation_till=0, subscription=False, "
-                       f"need_vip=True WHERE id_user={call.from_user.id};")
-        CONNECTION.commit()
 
         string = ''
         if current_user[1] == 0:
