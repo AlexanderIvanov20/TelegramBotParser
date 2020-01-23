@@ -65,10 +65,13 @@ def check_date(chat_id: int) -> None:
 
     if (current_activation_till is not None and
             today_now > current_activation_till[0]):
+        first_name = call.from_user.first_name
+        last_name = call.from_user.last_name
+
         CURSOR.execute("UPDATE database1.profiles SET "
                        f"vip=False, activation_date=0, "
                        f"activation_till=0, subscription=False, "
-                       f"need_vip=False WHERE id_user={chat_id};")
+                       f"need_vip=False, WHERE id_user={chat_id};")
         CONNECTION.commit()
 
 
@@ -217,12 +220,16 @@ def on_start(message: Message) -> None:
                    f"WHERE id_user={message.chat.id};")
     current_user = CURSOR.fetchone()
 
+    first_name = message.from_user.first_name
+    last_name = message.from_user.first_name
+
     # Create user if he/she doesn't exist
     if current_user is None:
         CURSOR.execute("INSERT INTO database1.profiles"
                        "(vip, activation_date, activation_till, id_user, "
-                       "subscription, need_vip) VALUES(False, 0, 0, "
-                       f"'{message.chat.id}', False, False)")
+                       "subscription, need_vip, credentials) "
+                       f"VALUES(False, 0, 0, '{message.chat.id}', False, "
+                       f"False, '{first_name}', '{last_name}')")
         CONNECTION.commit()
 
     keyboard = main_keyboard()
