@@ -393,8 +393,6 @@ def get_calls(call: CallbackQuery) -> None:
     elif call.data == 'no_vip':
         # Create request for vip-subscription
         CURSOR.execute("UPDATE database1.profiles SET "
-                       f"vip=False, activation_date=0, "
-                       f"activation_till=0, subscription=False, "
                        f"need_vip=True WHERE id_user={call.from_user.id};")
         CONNECTION.commit()
 
