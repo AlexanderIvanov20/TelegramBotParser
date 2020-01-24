@@ -68,8 +68,8 @@ def check_date(chat_id: int) -> None:
 
         CURSOR.execute("UPDATE database1.profiles SET "
                        f"vip=False, activation_date=0, "
-                       f"activation_till=0, subscription=False, "
-                       f"need_vip=False WHERE id_user={chat_id};")
+                       f"activation_till=0, subscription=False "
+                       f"WHERE id_user={chat_id};")
         CONNECTION.commit()
 
 
