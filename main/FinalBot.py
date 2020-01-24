@@ -19,7 +19,7 @@ def all_text() -> dict:
 CONNECTION = mysql_connector.connect(user='root', password='domestosroot50',
                                      host='localhost', database='database1',
                                      auth_plugin='mysql_native_password')
-CURSOR = CONNECTION.cursor(buffered=True)
+CURSOR = CONNECTION.cursor()
 
 # Bot settings
 TOKEN = all_text()['token']
@@ -416,9 +416,6 @@ def get_calls(call: CallbackQuery) -> None:
                               parse_mode='Markdown')
 
     elif call.data == 'vip':
-
-        CURSOR.close()
-
         CURSOR = CONNECTION.cursor()
         # Get users vip options
         CURSOR.execute(
