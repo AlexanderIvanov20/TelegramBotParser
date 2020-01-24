@@ -138,11 +138,12 @@ class Activate(View):
                     profile.activation_date = datetime.timestamp(
                         datetime.now())
                     profile.activation_till = datetime.timestamp(
-                        datetime.now() + timedelta(int(data.get('amount'))))
+                        datetime.now()) + 2592000 * int(data.get('amount'))
                 profile.vip = True
                 profile.need_vip = False
             elif data.get('action') == 'remove':
-                profile.activation_till == 0
+                profile.activation_date = 0
+                profile.activation_till = 0
                 profile.vip = False
                 profile.need_vip = False
             else:
