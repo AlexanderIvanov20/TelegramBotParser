@@ -422,6 +422,7 @@ def get_calls(call: CallbackQuery) -> None:
             f'WHERE id_user={call.from_user.id};'
         )
         current_user = CURSOR.fetchone()
+        print(current_user)
 
         string = ''
         if current_user[1] == 0:
@@ -437,6 +438,8 @@ def get_calls(call: CallbackQuery) -> None:
             second_date = datetime.fromtimestamp(
                 current_user[3]
             ).strftime(r'%d.%m.%Y %H:%M:%S')
+            print(first_date, second_date)
+
             end_of_subscription = current_user[3] - current_user[2]
             third_date = datetime.fromtimestamp(
                 end_of_subscription
