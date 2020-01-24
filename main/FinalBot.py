@@ -1,6 +1,7 @@
 import telebot
 import mysql.connector as mysql_connector
 import json
+import MySQLdb
 
 from telebot.types import *
 # from Parser import *
@@ -16,9 +17,8 @@ def all_text() -> dict:
 
 
 # Create connection with database
-CONNECTION = mysql_connector.connect(user='root', password='domestosroot50',
-                                     host='localhost', database='database1',
-                                     auth_plugin='mysql_native_password')
+CONNECTION = MySQLdb.connect(user='root', password='domestosroot50',
+                             host='localhost', database='database1')
 CURSOR = CONNECTION.cursor()
 
 # Bot settings
@@ -43,6 +43,7 @@ DATA = {}
 # Get all titles of compaines that in database, set it and sort by alphabet
 def get_all_titles():
     CURSOR.execute('SELECT recipient FROM database1.telegram_parser_comment;')
+    CONNECTION.commit()
     all_titles = CURSOR.fetchall()
 
     # Write to set for unique
@@ -61,6 +62,7 @@ def check_date(chat_id: int) -> None:
 
     CURSOR.execute('SELECT activation_till FROM database1.profiles '
                    f'WHERE id_user={chat_id};')
+    CONNECTION.commit()
     current_activation_till = CURSOR.fetchone()
 
     if (current_activation_till is not None and
@@ -217,6 +219,7 @@ def on_start(message: Message) -> None:
     # Try to get a user
     CURSOR.execute("SELECT * FROM database1.profiles "
                    f"WHERE id_user={message.chat.id};")
+    CONNECTION.commit()
     current_user = CURSOR.fetchone()
 
     first_name = message.from_user.first_name
@@ -331,11 +334,13 @@ def get_company(message: Message) -> None:
         # Get user
         CURSOR.execute("SELECT * FROM database1.profiles "
                        f"WHERE id_user={message.chat.id};")
+        CONNECTION.commit()
         current_user = CURSOR.fetchone()
 
         # Get all comments on current company
         CURSOR.execute(f"SELECT * FROM database1.telegram_parser_comment "
                        f"WHERE recipient='{user_message}';")
+        CONNECTION.commit()
         current_comments = CURSOR.fetchall()
         print(current_comments)
 
@@ -362,11 +367,13 @@ def get_url(message: Message) -> None:
     # Get user
     CURSOR.execute("SELECT * FROM database1.profiles "
                    f"WHERE id_user={message.chat.id};")
+    CONNECTION.commit()
     current_user = CURSOR.fetchone()
 
     # Get all comments on current company
     CURSOR.execute(f"SELECT * FROM database1.telegram_parser_comment "
                    f"WHERE recipient_link='{user_message}';")
+    CONNECTION.commit()
     current_comments = CURSOR.fetchall()
     print(current_comments)
 
@@ -422,6 +429,7 @@ def get_calls(call: CallbackQuery) -> None:
             'SELECT * FROM database1.profiles '
             f'WHERE id_user={call.from_user.id};'
         )
+        CONNECTION.commit()
         current_user = CURSOR.fetchone()
         print(current_user)
 
