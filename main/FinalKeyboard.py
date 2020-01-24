@@ -39,7 +39,9 @@ def pagination_keyboard(right=None, left=None):
         InlineKeyboardButton(text='📄 Вывести меню', callback_data='menu')
     )
 
-    if right is False:
+    if right is False and left is False:
+        keyboard.add(buttons[-1])
+    elif right is False:
         keyboard.add(buttons[0], buttons[-1])
     elif left is False:
         keyboard.add(buttons[-1], buttons[1])

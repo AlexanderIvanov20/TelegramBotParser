@@ -416,6 +416,10 @@ def get_calls(call: CallbackQuery) -> None:
                               parse_mode='Markdown')
 
     elif call.data == 'vip':
+
+        CURSOR.close()
+
+        CURSOR = CONNECTION.cursor()
         # Get users vip options
         CURSOR.execute(
             'SELECT * FROM database1.profiles '
@@ -459,7 +463,9 @@ def get_calls(call: CallbackQuery) -> None:
                              reply_markup=no_vip_keyboard())
         else:
             BOT.send_message(chat_id=call.from_user.id,
-                             text=string, parse_mode='Markdown')
+                             text=string, parse_mode='Markdown',
+                             reply_markup=pagination_keyboard(right=False,
+                                                              left=False))
 
     # On right button
     elif call.data == 'right':
