@@ -448,19 +448,12 @@ def get_calls(call: CallbackQuery) -> None:
                 current_user[3]
             ).strftime(r'%d.%m.%Y %H:%M:%S')
             print(first_date, second_date)
-
-            end_of_subscription = current_user[3] - current_user[2]
-            third_date = datetime.fromtimestamp(
-                end_of_subscription
-            ).strftime(r'%d дней')
         else:
             first_date = current_user[2]
             second_date = current_user[3]
-            third_date = current_user[3] - current_user[2]
 
         string += (f'День активации:  `{first_date}`\n'
-                   f'Окончание подписки:  `{second_date}`\n'
-                   f'Осталось до окончания: `{third_date}`\n')
+                   f'Окончание подписки:  `{second_date}`\n')
 
         if current_user[1] == 0:
             BOT.send_message(chat_id=call.from_user.id,
