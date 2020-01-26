@@ -370,8 +370,10 @@ def get_company(message: Message) -> None:
         print(current_comments)
 
         # Get count rows in database
-        count_comments = (f'Всего отрицательных отзывов: '
-                          f'{len(current_comments)}:')
+        if len(current_comments) != 0:
+            count_comments = (f'Всего отрицательных отзывов: '
+                              f'{len(current_comments)}')
+            BOT.send_message(chat_id=message.chat.id, text=count_comments)
 
         DATA[f'{message.from_user.id}_start'] = 0
         DATA[f'{message.from_user.id}_end'] = 3
@@ -408,13 +410,14 @@ def get_url(message: Message) -> None:
     print(current_comments)
 
     # Get count rows in database
-    count_comments = (f'Всего отрицательных отзывов: '
-                      f'{len(current_comments)}')
+    if len(current_comments) != 0:
+        count_comments = (f'Всего отрицательных отзывов: '
+                          f'{len(current_comments)}')
+        BOT.send_message(chat_id=message.chat.id, text=count_comments)
 
     DATA[f'{message.from_user.id}_start'] = 0
     DATA[f'{message.from_user.id}_end'] = 3
 
-    BOT.send_message(chat_id=message.chat.id, text=count_comments)
     output_result_string(current_comments=current_comments,
                          current_user=current_user, message=message)
 
