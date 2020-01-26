@@ -91,8 +91,9 @@ def check_today(chat_id: int) -> None:
 
 
 # Template for string
-def template_final_string(result_string: str, current_comments: list,
-                          chat_id: int) -> str:
+def template_final_string(current_comments: list, chat_id: int) -> str:
+    result_string = ''
+
     start = DATA[f'{chat_id}_start']
     end = DATA[f'{chat_id}_end']
 
@@ -113,8 +114,8 @@ def template_final_string(result_string: str, current_comments: list,
 
 
 # Template for output a result string
-def output_result_string(count_comments: str, current_comments: list,
-                         current_user: tuple, message: Message) -> None:
+def output_result_string(current_comments: list, current_user: tuple,
+                         message: Message) -> None:
     # Check on existing
     if current_comments == []:
         keyboard = main_keyboard()
@@ -126,7 +127,6 @@ def output_result_string(count_comments: str, current_comments: list,
         # If user have vip subcription
         if current_user[1] == 1:
             result_string = template_final_string(
-                result_string=count_comments,
                 current_comments=current_comments,
                 chat_id=message.chat.id
             )
@@ -160,7 +160,6 @@ def output_result_string(count_comments: str, current_comments: list,
             # If user don't do request yet
             if DATA[f'{message.chat.id}_count_requests'] <= 0:
                 result_string = template_final_string(
-                    result_string=count_comments,
                     current_comments=current_comments,
                     chat_id=message.chat.id
                 )
@@ -372,13 +371,13 @@ def get_company(message: Message) -> None:
 
         # Get count rows in database
         count_comments = (f'Всего отрицательных отзывов: '
-                          f'{len(current_comments)}\n\n')
+                          f'{len(current_comments)}:')
 
         DATA[f'{message.from_user.id}_start'] = 0
         DATA[f'{message.from_user.id}_end'] = 3
 
-        output_result_string(count_comments=count_comments,
-                             current_comments=current_comments,
+        BOT.send_message(chat_id=message.chat.id, text=count_comments)
+        output_result_string(current_comments=current_comments,
                              current_user=current_user, message=message)
     else:
         BOT.send_message(chat_id=message.chat.id,
@@ -410,13 +409,13 @@ def get_url(message: Message) -> None:
 
     # Get count rows in database
     count_comments = (f'Всего отрицательных отзывов: '
-                      f'{len(current_comments)}\n\n')
+                      f'{len(current_comments)}')
 
     DATA[f'{message.from_user.id}_start'] = 0
     DATA[f'{message.from_user.id}_end'] = 3
 
-    output_result_string(count_comments=count_comments,
-                         current_comments=current_comments,
+    BOT.send_message(chat_id=message.chat.id, text=count_comments)
+    output_result_string(current_comments=current_comments,
                          current_user=current_user, message=message)
 
 # Get all callbacks
