@@ -97,7 +97,7 @@ class TextEdit(View):
         data = {key: data.get(key) for key in data.keys()}
         data.pop('csrfmiddlewaretoken')
         with open(self.config_path, 'w', encoding='utf-8') as config:
-            json.dump(data, config, indent=4)
+            json.dump(data, config, indent=4, ensure_ascii=False)
         return redirect('textedit')
 
 
