@@ -564,6 +564,10 @@ def get_calls(call: CallbackQuery) -> None:
         BOT.send_message(chat_id=call.from_user.id,
                          text='Выбере нужный Вам пункт', reply_markup=keyboard)
 
+    elif call.data == 'write_admin':
+        BOT.send_message(chat_id=call.from_user.id,
+                         text='Телеграмм администратора: @artemtotal')
+
 
 # ! Get all shipping query
 # @BOT.shipping_query_handler(func=lambda query: True)

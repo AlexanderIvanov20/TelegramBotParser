@@ -8,7 +8,9 @@ def main_keyboard():
                              switch_inline_query_current_chat=''),
         InlineKeyboardButton(text='🔍 Поиск по ссылке',
                              callback_data='by_link'),
-        InlineKeyboardButton(text='👑 VIP', callback_data='vip')
+        InlineKeyboardButton(text='👑 VIP', callback_data='vip'),
+        InlineKeyboardButton(text='Написать администратору',
+                             callback_data='write_admin')
     )
     keyboard.add(*buttons)
     return keyboard
