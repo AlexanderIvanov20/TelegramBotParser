@@ -116,6 +116,9 @@ def template_final_string(current_comments: list, chat_id: int) -> str:
 # Template for output a result string
 def output_result_string(current_comments: list, current_user: tuple,
                          message: Message) -> None:
+    if f'{message.chat.id}_count_requests' not in DATA.keys():
+        DATA[f'{message.chat.id}_count_requests'] = 0
+
     # Check on existing
     if current_comments == []:
         keyboard = main_keyboard()
