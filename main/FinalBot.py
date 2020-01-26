@@ -378,7 +378,6 @@ def get_company(message: Message) -> None:
         DATA[f'{message.from_user.id}_start'] = 0
         DATA[f'{message.from_user.id}_end'] = 3
 
-        BOT.send_message(chat_id=message.chat.id, text=count_comments)
         output_result_string(current_comments=current_comments,
                              current_user=current_user, message=message)
     else:
