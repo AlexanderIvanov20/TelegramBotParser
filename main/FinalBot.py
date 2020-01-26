@@ -197,10 +197,7 @@ def output_result_string(current_comments: list, current_user: tuple,
             else:
                 # If user already did request today
                 BOT.send_message(chat_id=message.chat.id,
-                                 text='Запрос за сегодня уже сделан.\n\n'
-                                 'Купите подписку чтобы получать отзывы '
-                                 'бесконечно в течении месяца, либо '
-                                 'подождите до завтра.',
+                                 text=all_text()['cooldown'],
                                  reply_markup=no_vip_keyboard())
 
 
@@ -261,8 +258,7 @@ def default_query(query: InlineQuery) -> None:
         input_message_content=InputTextMessageContent(
             message_text='Название компании'
         ),
-        description='Начните вводить название и выберете из предложеных '
-                    'вариантов')
+        description=all_text()['search'])
     BOT.answer_inline_query(inline_query_id=query.id, results=[response])
 
 
@@ -384,8 +380,7 @@ def get_company(message: Message) -> None:
         output_result_string(current_comments=current_comments,
                              current_user=current_user, message=message)
     else:
-        BOT.send_message(chat_id=message.chat.id,
-                         text='Я не могу обработать введеный Вами текст')
+        BOT.send_message(chat_id=message.chat.id, text=all_text()['error'])
 
 
 # Get link on a company and and take all comments about it
@@ -598,8 +593,7 @@ def get_calls(call: CallbackQuery) -> None:
 @BOT.message_handler(content_types=['location', 'photo', 'video', 'text'])
 def else_block(message: Message) -> None:
     BOT.send_message(chat_id=message.chat.id,
-                     text='К сожалению, я Вас не понимаю... '
-                     'Попробуйте ввести корректные данные.',
+                     text=all_text()['misunderstanding'],
                      parse_mode='HTML')
 
 
