@@ -9,7 +9,7 @@ def main_keyboard():
         InlineKeyboardButton(text='🔍 Поиск по ссылке',
                              callback_data='by_link'),
         InlineKeyboardButton(text='👑 VIP', callback_data='vip'),
-        InlineKeyboardButton(text='Написать администратору',
+        InlineKeyboardButton(text='🖋️ Написать администратору',
                              callback_data='write_admin')
     )
     keyboard.add(*buttons)

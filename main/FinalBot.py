@@ -1,7 +1,6 @@
 import telebot
 import mysql.connector as mysql_connector
 import json
-# import MySQLdb
 
 from telebot.types import *
 from Parser import *
@@ -42,20 +41,20 @@ PROVIDER_TOKEN = all_text()['provider_token']
 DATA = {}
 
 
-# Get all titles of compaines that in database, set it and sort by alphabet
-def get_all_titles():
-    CURSOR.execute('SELECT recipient FROM database1.telegram_parser_comment;')
-    CONNECTION.commit()
-    all_titles = CURSOR.fetchall()
+# ! Get all titles of compaines that in database, set it and sort by alphabet
+# def get_all_titles() -> list:
+#     CURSOR.execute('SELECT recipient FROM database1.telegram_parser_comment')
+#     CONNECTION.commit()
+#     all_titles = CURSOR.fetchall()
 
-    # Write to set for unique
-    set_of_titles = set()
-    for item in all_titles:
-        set_of_titles.add(item[0])
+#     # Write to set for unique
+#     set_of_titles = set()
+#     for item in all_titles:
+#         set_of_titles.add(item[0])
 
-    # Sort
-    list_of_titles = list(sorted(list(set_of_titles)))
-    return list_of_titles
+#     # Sort
+#     list_of_titles = list(sorted(list(set_of_titles)))
+#     return list_of_titles
 
 
 # Check subcription till
@@ -202,13 +201,13 @@ def output_result_string(current_comments: list, current_user: tuple,
 
 
 # Add pages in commets
-def add_to_buttons(call: CallbackQuery):
+def add_to_buttons(call: CallbackQuery) -> None:
     DATA[f'{call.from_user.id}_start'] += 3
     DATA[f'{call.from_user.id}_end'] += 3
 
 
 # Remove pages in comments
-def remove_from_buttons(call: CallbackQuery):
+def remove_from_buttons(call: CallbackQuery) -> None:
     DATA[f'{call.from_user.id}_start'] -= 3
     DATA[f'{call.from_user.id}_end'] -= 3
 
@@ -216,7 +215,7 @@ def remove_from_buttons(call: CallbackQuery):
 @BOT.message_handler(commands=['start'])
 def on_start(message: Message) -> None:
     print('/start')
-    get_all_titles()
+    # get_all_titles()
 
     # Parser class instance
     # parser = Parser()
