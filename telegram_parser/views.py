@@ -1,11 +1,15 @@
+import os
+import json
+
+from django.conf import settings
 from django.views import View
 from users.models import Profile
 from django.contrib import messages
-from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Q
+from django.shortcuts import render, redirect, get_object_or_404
 
+from .forms import ConfigForm
 from .models import TelegramParserComment
-
 
 class Index(View):
     def get(self, request, page=1):
@@ -73,6 +77,18 @@ class Index(View):
         }
         return render(request, 'parser/mainpage.html', context)
 
+
+class TextEdit(View):
+    def get(self, request):
+        config_path = os.path.join(settings.BASE_DIR, 'config.json')
+        with open(config_path, 'r') as config:
+            fill = json.load(config)
+        form = ConfigForm(fill)
+        context = {
+            'title': 'Сообщения',
+            'form': form
+        }
+        return render(request, 'textedit/textedit.html', context)
 
 def detailed(request, comment_id):
     comment = TelegramParserComment.objects.get(id=int(comment_id))
