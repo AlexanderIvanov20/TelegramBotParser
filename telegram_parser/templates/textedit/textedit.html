@@ -1,0 +1,16 @@
+{% extends 'wrapper.html' %}
+{% load crispy_forms_tags %}
+
+{% block main %}
+
+    {% include 'header.html' %}
+    <div class="container mt-5">
+        <form action="" method="POST">
+            {% csrf_token %}
+            {{ form|crispy }}
+            <button class="btn btn-warning">Сохранить</button>
+        </form>
+    </div>
+
+{% endblock main %}
+    

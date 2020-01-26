@@ -7,11 +7,12 @@
                 <div class="btn-group" role="group" aria-label="Basic example">
                     <a href="{% url 'admin:index' %}" class="btn btn-dark">Админ-Панель</a>
                     <a href="{% url 'profiles' %}" class="btn btn-dark">Пользователи</a>
+                    <a href="{% url 'textedit' %}" class="btn btn-dark">Ответы бота</a>
                     <a href="{% url 'logout' %}" class="btn btn-dark">Выход</a>
                 </div>
             {% else %}
                 <div class="btn-group" role="group" aria-label="Basic example">
-                    <a href="{% url 'register' %}" class="btn btn-dark">Регистрация</a>
+                    <!-- <a href="{% url 'register' %}" class="btn btn-dark">Регистрация</a> -->
                     <a href="{% url 'authenticate' %}" class="btn btn-dark">Вход</a>
                 </div>
             {% endif %}
