@@ -4,7 +4,7 @@ import json
 # import MySQLdb
 
 from telebot.types import *
-# from Parser import *
+from Parser import *
 from FinalKeyboard import main_keyboard, no_vip_keyboard, pagination_keyboard
 from datetime import datetime, timedelta
 
@@ -21,6 +21,7 @@ CONNECTION = mysql_connector.connect(user='root', password='domestosroot50',
                                      host='localhost', database='database1',
                                      auth_plugin='mysql_native_password')
 CURSOR = CONNECTION.cursor(buffered=True)
+PARSER = Parser()
 
 # Bot settings
 TOKEN = all_text()['token']
@@ -90,9 +91,8 @@ def check_today(chat_id: int) -> None:
 
 
 # Template for string
-def template_final_string(current_comments: list, chat_id: int) -> str:
-    result_string = ''
-
+def template_final_string(result_string: str, current_comments: list,
+                          chat_id: int) -> str:
     start = DATA[f'{chat_id}_start']
     end = DATA[f'{chat_id}_end']
 
@@ -107,13 +107,14 @@ def template_final_string(current_comments: list, chat_id: int) -> str:
                           f'{even_comment[9]}</a> от '
                           f'<a href="{even_comment[8]}">'
                           f'{even_comment[7]}</a>\n'
-                          f"📰 Текст отзыва: {even_comment[11]}\n\n")
+                          f"📰 Текст отзыва: {even_comment[11]}\n"
+                          "---------------------------------------------\n")
     return result_string
 
 
 # Template for output a result string
-def output_result_string(current_comments: list, current_user: tuple,
-                         message: Message) -> None:
+def output_result_string(count_comments: str, current_comments: list,
+                         current_user: tuple, message: Message) -> None:
     # Check on existing
     if current_comments == []:
         keyboard = main_keyboard()
@@ -125,6 +126,7 @@ def output_result_string(current_comments: list, current_user: tuple,
         # If user have vip subcription
         if current_user[1] == 1:
             result_string = template_final_string(
+                result_string=count_comments,
                 current_comments=current_comments,
                 chat_id=message.chat.id
             )
@@ -148,12 +150,17 @@ def output_result_string(current_comments: list, current_user: tuple,
             else:
                 # Without pagination
                 BOT.send_message(chat_id=message.chat.id,
-                                 text=result_string, parse_mode='Markdown',
-                                 disable_web_page_preview=True)
+                                 text=result_string, parse_mode='HTML',
+                                 disable_web_page_preview=True,
+                                 reply_markup=pagination_keyboard(
+                                     right=False,
+                                     left=False
+                                 ))
         else:
             # If user don't do request yet
             if DATA[f'{message.chat.id}_count_requests'] <= 0:
                 result_string = template_final_string(
+                    result_string=count_comments,
                     current_comments=current_comments,
                     chat_id=message.chat.id
                 )
@@ -179,8 +186,12 @@ def output_result_string(current_comments: list, current_user: tuple,
                 else:
                     # Without pagination
                     BOT.send_message(chat_id=message.chat.id,
-                                     text=result_string, parse_mode='Markdown',
-                                     disable_web_page_preview=True)
+                                     text=result_string, parse_mode='HTML',
+                                     disable_web_page_preview=True,
+                                     reply_markup=pagination_keyboard(
+                                         right=False,
+                                         left=False
+                                     ))
             else:
                 # If user already did request today
                 BOT.send_message(chat_id=message.chat.id,
@@ -260,25 +271,39 @@ def query_get(query: InlineQuery) -> None:
         # Get user message
         user_message = query.query
         print(user_message)
-        # possible_variants = DATA[
-        #     f'{query.from_user.id}_parser'
-        # ].get_variants(user_message)['items']
-        # print(possible_variants[0])
-        possible_variants = get_all_titles()
+        possible_variants = PARSER.get_variants(user_message)['items']
+        print(possible_variants[0])
+        # possible_variants = get_all_titles()
         final_inline_query = []
 
+        # point = 1
+        # # Add point to drop-up menu
+        # for item in possible_variants:
+        #     if user_message.lower() in item.lower() or \
+        #             user_message.lower() == item.lower():
+        #         response = InlineQueryResultArticle(
+        #             id=f"{point}",
+        #             title=f"{item}",
+        #             input_message_content=InputTextMessageContent(f"/{item}/")
+        #         )
+        #         final_inline_query.append(response)
+        #         point += 1
+
         point = 1
-        # Add point to drop-up menu
+        # Add comapnies to drop-up menu
         for item in possible_variants:
-            if user_message.lower() in item.lower() or \
-                    user_message.lower() == item.lower():
-                response = InlineQueryResultArticle(
-                    id=f"{point}",
-                    title=f"{item}",
-                    input_message_content=InputTextMessageContent(f"/{item}/")
-                )
-                final_inline_query.append(response)
-                point += 1
+            even_owner = item['owner']
+            response = InlineQueryResultArticle(
+                id=f"{even_owner['id']}",
+                title=f"{even_owner['nameWithoutBrand']}",
+                input_message_content=InputTextMessageContent(
+                    f"/{even_owner['nameWithoutBrand']}/"
+                ),
+                description=f"{even_owner['timeOnSite']}. "
+                            f"{even_owner['address']['country']}-"
+                            f"{even_owner['address']['town']}")
+            final_inline_query.append(response)
+            point += 1
 
         BOT.answer_inline_query(inline_query_id=query.id,
                                 results=final_inline_query)
@@ -345,10 +370,15 @@ def get_company(message: Message) -> None:
         current_comments = CURSOR.fetchall()
         print(current_comments)
 
+        # Get count rows in database
+        count_comments = (f'Всего отрицательных отзывов: '
+                          f'{len(current_comments)}\n\n')
+
         DATA[f'{message.from_user.id}_start'] = 0
         DATA[f'{message.from_user.id}_end'] = 3
 
-        output_result_string(current_comments=current_comments,
+        output_result_string(count_comments=count_comments,
+                             current_comments=current_comments,
                              current_user=current_user, message=message)
     else:
         BOT.send_message(chat_id=message.chat.id,
@@ -378,10 +408,15 @@ def get_url(message: Message) -> None:
     current_comments = CURSOR.fetchall()
     print(current_comments)
 
+    # Get count rows in database
+    count_comments = (f'Всего отрицательных отзывов: '
+                      f'{len(current_comments)}\n\n')
+
     DATA[f'{message.from_user.id}_start'] = 0
     DATA[f'{message.from_user.id}_end'] = 3
 
-    output_result_string(current_comments=current_comments,
+    output_result_string(count_comments=count_comments,
+                         current_comments=current_comments,
                          current_user=current_user, message=message)
 
 # Get all callbacks

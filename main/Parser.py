@@ -90,11 +90,11 @@ class Parser:
         template_write_to_database(even_soup=soup, CURSOR=CURSOR)
         CURSOR.close()
 
-    # def get_variants(self, string: str) -> dict:
-    #     encoded_string = requests.utils.quote(string)
-    #     url = BASE_URL + f'?query={encoded_string}&excludeCurrent=false'
-    #     response = self.__session.get(url).json()
-    #     return response
+    def get_variants(self, string: str) -> dict:
+        encoded_string = requests.utils.quote(string)
+        url = BASE_URL + f'?query={encoded_string}&excludeCurrent=false'
+        response = self.__session.get(url).json()
+        return response
 
     # def initial_request(self, string: str) -> tuple:
     #     self.PAGINATED_LINKS = []
