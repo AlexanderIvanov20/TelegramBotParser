@@ -122,8 +122,7 @@ def output_result_string(current_comments: list, current_user: tuple,
     if current_comments == []:
         keyboard = main_keyboard()
         BOT.send_message(chat_id=message.chat.id,
-                         text='Компания или отзывов на нее не найдены. '
-                              'Попробуйте еще раз',
+                         text=all_text()['not_found'],
                          reply_markup=keyboard)
     else:
         # If user have vip subcription
@@ -427,7 +426,7 @@ def get_calls(call: CallbackQuery) -> None:
     if call.data == 'by_link':
         # Get link it self
         some = BOT.send_message(chat_id=call.from_user.id,
-                                text='Введите ссылку на компанию')
+                                text=all_text()['choose_company'])
         BOT.register_next_step_handler(some, get_url)
 
     # ! Invoice sending
@@ -556,7 +555,7 @@ def get_calls(call: CallbackQuery) -> None:
     elif call.data == 'menu':
         keyboard = main_keyboard()
         BOT.send_message(chat_id=call.from_user.id,
-                         text='Выбере нужный Вам пункт', reply_markup=keyboard)
+                         text=all_text()['choose_tab'], reply_markup=keyboard)
 
     elif call.data == 'write_admin':
         BOT.send_message(chat_id=call.from_user.id,
