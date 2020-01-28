@@ -5,7 +5,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 
 while 1:
-    executable = os.path.join(BASE_DIR, 'Scripts', 'python')
+    executable = os.path.join(BASE_DIR, 'venv' 'Scripts', 'python')
     program = os.path.join(BASE_DIR, 'main', 'FinalBot.py')
     system('{} {}'.format(executable, program))
     print("Restarting now... Press Ctrl-C once again to exit")
