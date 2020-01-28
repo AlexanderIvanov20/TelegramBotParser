@@ -3,7 +3,7 @@ import mysql.connector as mysql_conn
 
 from bs4 import BeautifulSoup
 from datetime import datetime
-from random import sample
+from random import sample, choice
 
 
 BASE_URL = 'https://lardi-trans.com/ajax/reliability_zone/firm/search/'
@@ -13,8 +13,16 @@ HEADERS = {
                   '537.36 (KHTML, like Gecko) Chrome/79.0.3945.79 '
                   'Safari/537.36'
 }
+with open('proxies.txt', 'r', encoding='utf-8') as file:
+    data = file.readlines()
+
+PROXIES = []
+for item in data:
+    PROXIES.append(item.strip())
+print(PROXIES)
+
 PROXY = {
-    'http': '217.20.183.149:4145'
+    'http': str(choice(PROXIES))
 }
 CONNECTION = mysql_conn.connect(user='root', password='domestosroot50',
                                 host='localhost', database='database1',
@@ -66,7 +74,7 @@ class Parser:
                 template_write_to_database(even_soup=even_soup)
             except Exception as error:
                 self.__session.proxies = {
-                    'http': '94.76.92.10:4145'
+                    'http': str(choice(PROXIES))
                 }
                 even_response = self.__session.get(url).content
                 even_soup = BeautifulSoup(even_response, 'lxml')
