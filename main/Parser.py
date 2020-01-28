@@ -4,6 +4,8 @@ from sys import argv as sys_args
 from bs4 import BeautifulSoup
 from datetime import datetime
 from random import sample, choice
+import os.path
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 
 BASE_URL = 'https://lardi-trans.com/ajax/reliability_zone/firm/search/'
@@ -13,7 +15,7 @@ HEADERS = {
                   '537.36 (KHTML, like Gecko) Chrome/79.0.3945.79 '
                   'Safari/537.36'
 }
-with open('proxies.txt', 'r', encoding='utf-8') as file:
+with open(os.path.join(BASE_DIR, 'proxies.txt'), 'r', encoding='utf-8') as file:
     data = file.readlines()
 
 PROXIES = []
