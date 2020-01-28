@@ -6,11 +6,11 @@ from telebot.types import *
 from Parser import *
 from FinalKeyboard import main_keyboard, no_vip_keyboard, pagination_keyboard
 from datetime import datetime, timedelta
-
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 # Texts to answer of bot
 def all_text() -> dict:
-    with open('config.json', 'r', encoding='utf-8') as file:
+    with open(os.path.join(BASE_DIR, 'config.json'), 'r', encoding='utf-8') as file:
         data_text = json.load(file)
     return data_text
 
