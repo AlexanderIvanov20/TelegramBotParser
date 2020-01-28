@@ -1,6 +1,6 @@
 import requests
 import mysql.connector as mysql_conn
-
+from sys import argv as sys_args
 from bs4 import BeautifulSoup
 from datetime import datetime
 from random import sample, choice
@@ -24,7 +24,7 @@ print(PROXIES)
 PROXY = {
     'http': str(choice(PROXIES))
 }
-CONNECTION = mysql_conn.connect(user='root', password='domestosroot50',
+CONNECTION = mysql_conn.connect(user='root', password='myrootpassword',
                                 host='localhost', database='database1',
                                 auth_plugin='mysql_native_password')
 
@@ -227,5 +227,9 @@ def template_write_to_database(even_soup, CURSOR):
 
 if __name__ == '__main__':
     parser = Parser()
-    parser.parse_all()
-    # parser.additional_pages()
+    try:
+        mode = sys_args[1]
+    except KeyError:
+        parser.parse_all()
+    if mode == 'add':
+        parser.additional_pages()
