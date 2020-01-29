@@ -7,6 +7,7 @@
     "choose_tab": "Выбере нужный Вам пункт",
     "choose_company": "Введите ссылку на компанию",
     "not_found": "Компания или отзывов на нее не найдены. Попробуйте еще раз",
+    "vip": "Для приобретения подписки пройдите по ссылке:\nhttps://send.monobank.ua/6Qv6mVbS6y\nВ комментарии перевода укажите Ваш Telegram ID\nЭто обязательно, иначе мы не сможем Вас идентифицировать\n\nВаш Telegram ID: ",
     "token": "833415427:AAEHenzAEuf7dxpDn-f6OlftLStwM8ER4JU",
     "provider_token": "410694247:TEST:19cdf17e-d73c-45cf-aa8f-f879ffe93256"
 }
