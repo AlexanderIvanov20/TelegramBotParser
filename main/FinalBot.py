@@ -99,8 +99,8 @@ def template_final_string(current_comments: list, chat_id: int) -> str:
     for even_comment in current_comments[start:end]:
         result_string += (f"🏙️ Города перевозки: {even_comment[1]} - "
                           f"{even_comment[2]}\n"
-                          f"📅 Дата перевозки: {even_comment[3]}\n"
-                          f"⏰ Дата размещения отзыва: {even_comment[4]}\n"
+                          f"📅 Дата перевозки: {even_comment[4]}\n"
+                          f"⏰ Дата размещения отзыва: {even_comment[3]}\n"
                           f"🏳️ Страны перевозки: {even_comment[5]} - "
                           f"{even_comment[6]}\n"
                           f'👤Отзыв о <a href="{even_comment[10]}">'
@@ -367,7 +367,8 @@ def get_company(message: Message) -> None:
         print(current_comments)
 
         # Get count rows in database
-        if len(current_comments) != 0:
+        if len(current_comments) != 0 and \
+                DATA[f'{message.chat.id}_count_requests'] <= 0:
             count_comments = (f'Всего отрицательных отзывов: '
                               f'{len(current_comments)}')
             BOT.send_message(chat_id=message.chat.id, text=count_comments)
@@ -405,7 +406,8 @@ def get_url(message: Message) -> None:
     print(current_comments)
 
     # Get count rows in database
-    if len(current_comments) != 0:
+    if len(current_comments) != 0 and \
+            DATA[f'{message.chat.id}_count_requests'] <= 0:
         count_comments = (f'Всего отрицательных отзывов: '
                           f'{len(current_comments)}')
         BOT.send_message(chat_id=message.chat.id, text=count_comments)
