@@ -15,7 +15,9 @@ HEADERS = {
                   '537.36 (KHTML, like Gecko) Chrome/79.0.3945.79 '
                   'Safari/537.36'
 }
-with open(os.path.join(BASE_DIR, 'proxies.txt'), 'r', encoding='utf-8') as file:
+with open(os.path.join(
+    BASE_DIR, 'proxies.txt'
+), 'r', encoding='utf-8') as file:
     data = file.readlines()
 
 PROXIES = []
@@ -26,7 +28,7 @@ print(PROXIES)
 PROXY = {
     'http': str(choice(PROXIES))
 }
-CONNECTION = mysql_conn.connect(user='root', password='myrootpassword',
+CONNECTION = mysql_conn.connect(user='root', password='domestosroot50',
                                 host='localhost', database='database1',
                                 auth_plugin='mysql_native_password')
 

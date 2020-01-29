@@ -9,8 +9,12 @@ from datetime import datetime, timedelta
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 # Texts to answer of bot
+
+
 def all_text() -> dict:
-    with open(os.path.join(BASE_DIR, 'config.json'), 'r', encoding='utf-8') as file:
+    with open(os.path.join(
+        BASE_DIR, 'config.json'
+    ), 'r', encoding='utf-8') as file:
         data_text = json.load(file)
     return data_text
 
@@ -448,14 +452,8 @@ def get_calls(call: CallbackQuery) -> None:
         #                  invoice_payload='subcription coupon')
 
         BOT.send_message(chat_id=call.from_user.id,
-                         text='Для приобретения подписки '
-                              'пройдите по ссылке:\n'
-                              'https://send.monobank.ua/6Qv6mVbS6y\n\n'
-                              'В комментарии перевода укажите Ваш '
-                              f'Telegram ID: `{call.from_user.id}`\n'
-                              'Это обязательно, иначе мы не сможем '
-                              'Вас идентифицировать',
-                              parse_mode='Markdown')
+                         text=all_text()['vip'] + f'`{call.from_user.id}`',
+                         parse_mode='Markdown')
 
     elif call.data == 'vip':
         # Get users vip options
