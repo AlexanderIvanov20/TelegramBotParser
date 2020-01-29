@@ -70,12 +70,14 @@ class Index(View):
         }
         return render(request, 'parser/mainpage.html', context)
 
-    def post(self, request):
+    def post(self, request, page=1):
         data = request.POST
-        context = {
-            'title': 'Комментарии'
-        }
-        return render(request, 'parser/mainpage.html', context)
+        print(data)
+        if 'method' in data:
+            if data.get('method') == 'delete':
+                comment = get_object_or_404(TelegramParserComment, id=int(data.get('comment_id')))
+                comment.delete()
+        return redirect('index', page=page)
 
 
 class TextEdit(View):
