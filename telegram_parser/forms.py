@@ -10,6 +10,6 @@ class ConfigForm(forms.Form):
     choose_tab = forms.CharField(widget=forms.Textarea)
     choose_company = forms.CharField(widget=forms.Textarea)
     not_found = forms.CharField(widget=forms.Textarea)
-    try_again = forms.CharField(widget=forms.Textarea)
+    vip = forms.CharField(widget=forms.Textarea)
     token = forms.CharField(label='Bot Token')
     provider_token = forms.CharField(label='Payment provider token')

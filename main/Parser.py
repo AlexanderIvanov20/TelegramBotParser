@@ -1,9 +1,11 @@
 import requests
 import mysql.connector as mysql_conn
-
+from sys import argv as sys_args
 from bs4 import BeautifulSoup
 from datetime import datetime
 from random import sample, choice
+import os.path
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 
 BASE_URL = 'https://lardi-trans.com/ajax/reliability_zone/firm/search/'
@@ -13,7 +15,7 @@ HEADERS = {
                   '537.36 (KHTML, like Gecko) Chrome/79.0.3945.79 '
                   'Safari/537.36'
 }
-with open('proxies.txt', 'r', encoding='utf-8') as file:
+with open(os.path.join(BASE_DIR, 'proxies.txt'), 'r', encoding='utf-8') as file:
     data = file.readlines()
 
 PROXIES = []
@@ -24,7 +26,7 @@ print(PROXIES)
 PROXY = {
     'http': str(choice(PROXIES))
 }
-CONNECTION = mysql_conn.connect(user='root', password='domestosroot50',
+CONNECTION = mysql_conn.connect(user='root', password='myrootpassword',
                                 host='localhost', database='database1',
                                 auth_plugin='mysql_native_password')
 
@@ -227,5 +229,9 @@ def template_write_to_database(even_soup, CURSOR):
 
 if __name__ == '__main__':
     parser = Parser()
-    parser.parse_all()
-    # parser.additional_pages()
+    try:
+        mode = sys_args[1]
+    except KeyError:
+        parser.parse_all()
+    if mode == 'add':
+        parser.additional_pages()

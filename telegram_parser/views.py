@@ -15,7 +15,7 @@ from .models import TelegramParserComment
 class Index(View):
     def get(self, request, page=1):
         data = request.GET
-        print(data)
+        # print(data)
         page = int(page)
         filter_data = {key: item for key, item in data.items() if item != ''}
         # Filter dictionary copy to fill form
@@ -48,6 +48,7 @@ class Index(View):
         elif 'search' not in filter_data and 'searchtype' in filter_data:
             filter_data.pop('searchtype')
             messages.info(request, 'Пустая строка поиска')
+        pagelist = list(range(1, int(len(comments) / 30)))
 
         if 'sort_by' in filter_data:
             comments = comments.order_by(filter_data.pop('sort_by'))
@@ -61,8 +62,6 @@ class Index(View):
         elif len(comments) == 0:
             messages.warning(request, 'Отзывов не найдено')
 
-        pagelist = list(range(1, int(len(comments) / 30)))
-
         context = {
             'title': 'Комментарии',
             'comments': comments,
@@ -71,12 +70,14 @@ class Index(View):
         }
         return render(request, 'parser/mainpage.html', context)
 
-    def post(self, request):
+    def post(self, request, page=1):
         data = request.POST
-        context = {
-            'title': 'Комментарии'
-        }
-        return render(request, 'parser/mainpage.html', context)
+        print(data)
+        if 'method' in data:
+            if data.get('method') == 'delete':
+                comment = get_object_or_404(TelegramParserComment, id=int(data.get('comment_id')))
+                comment.delete()
+        return redirect('index', page=page)
 
 
 class TextEdit(View):
