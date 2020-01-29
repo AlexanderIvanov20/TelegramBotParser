@@ -370,6 +370,9 @@ def get_company(message: Message) -> None:
         current_comments = CURSOR.fetchall()
         print(current_comments)
 
+        if f'{message.chat.id}_count_requests' not in DATA.keys():
+            DATA[f'{message.chat.id}_count_requests'] = 0
+
         # Get count rows in database
         if len(current_comments) != 0 and \
                 DATA[f'{message.chat.id}_count_requests'] <= 0:
@@ -408,6 +411,9 @@ def get_url(message: Message) -> None:
     CONNECTION.commit()
     current_comments = CURSOR.fetchall()
     print(current_comments)
+
+    if f'{message.chat.id}_count_requests' not in DATA.keys():
+        DATA[f'{message.chat.id}_count_requests'] = 0
 
     # Get count rows in database
     if len(current_comments) != 0 and \
