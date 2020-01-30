@@ -84,7 +84,7 @@ class TextEdit(View):
     config_path = os.path.join(settings.BASE_DIR, 'config.json')
 
     def get(self, request):
-        with open(self.config_path, 'r', encoding='utf-8') as config:
+        with open(self.config_path, 'r', encoding='utf-8-sig') as config:
             fill = json.load(config)
         form = ConfigForm(fill)
         context = {
@@ -97,7 +97,7 @@ class TextEdit(View):
         data = request.POST
         data = {key: data.get(key) for key in data.keys()}
         data.pop('csrfmiddlewaretoken')
-        with open(self.config_path, 'w', encoding='utf-8') as config:
+        with open(self.config_path, 'w', encoding='utf-8-sig') as config:
             json.dump(data, config, indent=4, ensure_ascii=False)
         return redirect('textedit')
 
