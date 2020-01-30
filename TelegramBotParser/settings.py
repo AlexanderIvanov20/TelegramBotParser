@@ -26,7 +26,8 @@ SECRET_KEY = 'o+k_=tjtskbddln6&ufe-#tg0#4jb)9&@uqziamw^+(y25ooy2'
 DEBUG = False
 
 ALLOWED_HOSTS = [
-    'localhost'
+    'localhost',
+    '192.168.43.5'
 ]
 
 
@@ -89,7 +90,7 @@ DATABASES = {
         'NAME': 'database1',
         'USER': 'root',
         'PASSWORD': 'myrootpassword',
-        'HOST': '194.247.42.123',
+        'HOST': 'localhost',
         'PORT': '3306'
     }
 }

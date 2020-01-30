@@ -14,17 +14,23 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 def all_text() -> dict:
     with open(os.path.join(
         BASE_DIR, 'config.json'
-    ), 'r', encoding='utf-8') as file:
+    ), 'r', encoding='utf-8-sig') as file:
         data_text = json.load(file)
     return data_text
 
 
 # Create connection with database
-CONNECTION = mysql_connector.connect(user='root', password='domestosroot50',
-                                     host='localhost', database='database1',
+
+
+CONNECTION = mysql_connector.connect(user='root', password='myrootpassword',
+                                     host='127.0.0.1', database='database1',
                                      auth_plugin='mysql_native_password')
+
 CURSOR = CONNECTION.cursor(buffered=True)
 PARSER = Parser()
+
+
+
 
 # Bot settings
 TOKEN = all_text()['token']
