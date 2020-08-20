@@ -22,14 +22,14 @@ def all_text() -> dict:
 # Create connection with database
 
 
-CONNECTION = mysql_connector.connect(user='root', password='myrootpassword',
-                                     host='127.0.0.1', database='database1',
-                                     auth_plugin='mysql_native_password')
+CONNECTION = mysql_connector.connect(
+    user=os.environ.get('USER_DB'), password=os.environ.get('PASSWORD_DB'),
+    host=os.environ.get('HOST_DB'), database=os.environ.get('DB'),
+    auth_plugin='mysql_native_password'
+)
 
 CURSOR = CONNECTION.cursor(buffered=True)
 PARSER = Parser()
-
-
 
 
 # Bot settings
@@ -435,6 +435,8 @@ def get_url(message: Message) -> None:
                          current_user=current_user, message=message)
 
 # Get all callbacks
+
+
 @BOT.callback_query_handler(func=lambda call: True)
 def get_calls(call: CallbackQuery) -> None:
     print('call')
