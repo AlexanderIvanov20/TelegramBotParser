@@ -13,7 +13,7 @@ macholib==1.13
 mysql==0.0.2
 mysql-connector-python==8.0.18
 mysqlclient==1.4.6
-Pillow==8.1.1
+Pillow==9.0.0
 protobuf==3.11.2
 pycodestyle==2.5.0
 pyTelegramBotAPI==3.6.6
