@@ -14,7 +14,7 @@ mysql==0.0.2
 mysql-connector-python==8.0.18
 mysqlclient==1.4.6
 Pillow==8.1.1
-protobuf==3.11.2
+protobuf==3.15.0
 pycodestyle==2.5.0
 pyTelegramBotAPI==3.6.6
 pytz==2019.3
