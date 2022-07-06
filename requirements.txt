@@ -8,7 +8,7 @@ chardet==3.0.4
 Django==3.0.14
 django-crispy-forms==1.8.1
 idna==2.8
-lxml==4.6.3
+lxml==4.9.1
 macholib==1.13
 mysql==0.0.2
 mysql-connector-python==8.0.18
